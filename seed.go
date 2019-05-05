@@ -37,8 +37,14 @@ type Route struct {
 	// - StrictSlash true: 301 moved permanently to "/path"
 	StrictSlash bool
 
+	// HttpMethods is a list of strings that the route supports. The contents
+	// should correspond to the default HTTP methods: GET, POST, PUT, PATCH,
+	// DELETE, OPTIONS, HEAD, CONNECT, and TRACE
 	HttpMethods []string
 
+	// HandlerName is the name of the method that will be called by the server
+	// when the specified endpoint is requested, and as such, will contain the
+	// business logic
 	HandlerName string
 }
 
@@ -52,7 +58,15 @@ type Middleware struct {
 // Info contains the generic information about a service object - its name, a
 // short summary, and an optional longer description.
 type Info struct {
-	Name        string
-	Summary     string
+	// Name should be a simple name for the service object.
+	Name string
+
+	// Summary should contain a short description of the service object,
+	// typically a single sentence
+	Summary string
+
+	// Description may contain a longer explanation about what the service
+	// object is for. It may provide more clarity to the reason for its
+	// existence, or provide additional details about how it should be used.
 	Description string
 }
