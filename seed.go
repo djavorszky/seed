@@ -48,11 +48,29 @@ type Route struct {
 	HandlerName string
 }
 
+// Middleware is an object that details a middleware to be added to a specific
+// path.
 type Middleware struct {
+	// Info holds generic information about the middleware itself.
 	Info
-	Path        string
+
+	// Paths contains the endpoints on which the middleware should be applied.
+	// To apply to all routes, simply specify "*"
+	Paths []string
+
+	// HandlerName is the name of the method that will be called by the server
+	// when the middleware is hit.
 	HandlerName string
-	Priority    int
+
+	// Priority dictates the order in which the middleware should be invoked.
+	// It can be used to declare the order when the order is important. For
+	// example, one may decide that a middleware that does http->https redirects
+	// should be called before a middleware logs request information, so as not
+	// to double log entries.
+	//
+	// Priority is a relative number. Middlewares will be added in order from
+	// highest to lowest priority
+	Priority int
 }
 
 // Info contains the generic information about a service object - its name, a
