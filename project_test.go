@@ -30,12 +30,51 @@ func TestInitProject(t *testing.T) {
 		t.Errorf("project: %v", err)
 	}
 
+	err = checkProjectDescriptor(actualName)
+	if err != nil {
+		t.Errorf("project descriptor: %v", err)
+	}
+
 	// check if foldername.go is correct
 	err = checkServiceFile(actualName)
 	if err != nil {
 		t.Errorf("service file: %v", err)
 	}
 
+}
+
+func checkProjectDescriptor(projectName string) error {
+	descriptor := fmt.Sprintf("%s.yml", projectName)
+
+	f, err := os.Stat(descriptor)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("%s does not exist", descriptor)
+		}
+
+		return fmt.Errorf("checking %s: %v", descriptor, err)
+	}
+
+	err = checkFileIsCorrect(f)
+	if err != nil {
+		return fmt.Errorf("checking %s: %v", descriptor, err)
+	}
+
+	return nil
+}
+
+func checkFileIsCorrect(f os.FileInfo) error {
+	fileMode := f.Mode()
+	if fileMode.IsDir() {
+		return fmt.Errorf("is a directory")
+	}
+	filePerm := fileMode.Perm()
+	if filePerm != defaultPerm {
+		return fmt.Errorf("expected fileperm %v, got: %v",
+			defaultPerm, filePerm)
+	}
+
+	return nil
 }
 
 func checkProjectCreated(projectName string) error {
@@ -54,9 +93,9 @@ func checkProjectCreated(projectName string) error {
 	}
 
 	filePerm := fileMode.Perm()
-	if filePerm != 0755 {
-		return fmt.Errorf("%s: expected fileperm 0755, encountered: %v",
-			projectName, filePerm)
+	if filePerm != defaultPerm {
+		return fmt.Errorf("%s: expected fileperm %v, encountered: %v",
+			projectName, defaultPerm, filePerm)
 	}
 
 	return nil
@@ -74,15 +113,9 @@ func checkServiceFile(projectName string) error {
 		return fmt.Errorf("checking %s: %v", serviceFileName, err)
 	}
 
-	fileMode := f.Mode()
-	if fileMode.IsDir() {
-		return fmt.Errorf("%s: is a directory", serviceFileName)
-	}
-
-	filePerm := fileMode.Perm()
-	if filePerm != 0755 {
-		return fmt.Errorf("%s: expected fileperm 0755, encountered: %v",
-			serviceFileName, filePerm)
+	err = checkFileIsCorrect(f)
+	if err != nil {
+		return fmt.Errorf("checking %s: %v", serviceFileName, err)
 	}
 
 	return nil
