@@ -7,6 +7,17 @@ import (
 	"testing"
 )
 
+var pwd string
+
+func init() {
+	var err error
+
+	pwd, err = os.Getwd()
+	if err != nil {
+		panic(fmt.Sprintf("unable to get pwd: %v", err))
+	}
+}
+
 func TestInitProject(t *testing.T) {
 	name := "testProject"
 
@@ -44,7 +55,8 @@ func TestInitProject(t *testing.T) {
 }
 
 func checkProjectDescriptor(projectName string) error {
-	descriptor := fmt.Sprintf("%s.yml", projectName)
+	filename := fmt.Sprintf("%s.yml", projectName)
+	descriptor := filepath.Join(pwd, projectName, filename)
 
 	f, err := os.Stat(descriptor)
 	if err != nil {
@@ -102,7 +114,8 @@ func checkProjectCreated(projectName string) error {
 }
 
 func checkServiceFile(projectName string) error {
-	serviceFileName := fmt.Sprintf("%s.go", projectName)
+	filename := fmt.Sprintf("%s.go", projectName)
+	serviceFileName := filepath.Join(pwd, projectName, filename)
 
 	f, err := os.Stat(serviceFileName)
 	if err != nil {

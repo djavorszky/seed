@@ -13,7 +13,7 @@ const (
 
 	initFailed = "init failed: %v"
 
-	permWindows = 0777
+	permWindows = 0666
 	permLinux   = 0755
 )
 
@@ -28,20 +28,8 @@ func init() {
 	}
 }
 
-var pwd string
-
 func InitProject(projectName string) error {
-	var err error
-
-	pwd, err = os.Getwd()
-	if err != nil {
-		return fmt.Errorf(initFailed, err)
-	}
-
-	err = createDirs(defaultPerm,
-		[]string{pwd, projectName, cmdFolder},
-		[]string{pwd, projectName, genFolder},
-	)
+	err := createProjectStructure(projectName)
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
 	}
@@ -49,14 +37,75 @@ func InitProject(projectName string) error {
 	return nil
 }
 
-func createDirs(mode os.FileMode, paths ...[]string) error {
+func createProjectStructure(projectName string) error {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	err = createDirs(
+		[]string{pwd, projectName},
+		[]string{pwd, projectName, cmdFolder},
+		[]string{pwd, projectName, genFolder},
+	)
+	if err != nil {
+		return fmt.Errorf("creating folders: %v", err)
+	}
+	err = createFiles(
+		[]string{pwd, projectName, fmt.Sprintf("%v.go", projectName)},
+		[]string{pwd, projectName, fmt.Sprintf("%v.yml", projectName)},
+		[]string{pwd, projectName, cmdFolder, "main.go"},
+		[]string{pwd, projectName, genFolder, "generated.go"},
+		[]string{pwd, projectName, genFolder, "interface.go"},
+	)
+	if err != nil {
+		return fmt.Errorf("creating files: %v", err)
+	}
+
+	return nil
+}
+
+func createDirs(paths ...[]string) error {
 	for _, path := range paths {
 		fullPath := filepath.Join(path...)
+
+		fmt.Printf("Creating %v\n", fullPath)
 
 		err := os.MkdirAll(fullPath, defaultPerm)
 		if err != nil {
 			return fmt.Errorf("creating %v failed: %v", path, err)
 		}
+
+		err = os.Chmod(fullPath, defaultPerm)
+		if err != nil {
+			return fmt.Errorf("changing %v permissions failed: %v", path, err)
+		}
+	}
+
+	return nil
+}
+
+func createFiles(paths ...[]string) error {
+	for _, path := range paths {
+		fullPath := filepath.Join(path...)
+
+		fmt.Printf("Creating %v\n", fullPath)
+
+		f, err := os.Create(fullPath)
+		if err != nil {
+			return fmt.Errorf("creating %v failed: %v", path, err)
+		}
+
+		err = f.Close()
+		if err != nil {
+			return fmt.Errorf("closing %v failed: %v", path, err)
+		}
+
+		err = os.Chmod(fullPath, defaultPerm)
+		if err != nil {
+			return fmt.Errorf("updating %v permissions failed: %v", path, err)
+		}
+
 	}
 
 	return nil
