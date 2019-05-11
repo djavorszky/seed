@@ -1,9 +1,8 @@
 package gen
 
 import (
-	"net/http"
-
 	mux "github.com/gorilla/mux"
+	"net/http"
 )
 
 // Service is the struct that will be exposed to serve HTTP traffic.
@@ -42,26 +41,21 @@ func New(service AdmiralService) *Service {
 
 // routes sets up the routes to be served by the service
 func (s *Service) routes() {
-	routes := []route{
-		{
-			path:    "/",
-			handler: s.serviceImpl.Index(),
-			methods: []string{http.MethodGet},
-		},
-	}
+	routes := []route{{
+
+		handler: s.serviceImpl.Index(),
+		methods: []string{http.MethodGet},
+		path:    "/",
+	}}
 
 	for _, route := range routes {
-		s.router.StrictSlash(true).
-			HandleFunc(route.path, route.handler).
-			Methods(route.methods...)
+		s.router.StrictSlash(true).HandleFunc(route.path, route.handler).Methods(route.methods...)
 	}
 }
 
 // middlewares sets up the middlewares to be set up by the service
 func (s *Service) middlewares() {
-	mws := []mux.MiddlewareFunc{
-		s.serviceImpl.LoggerMw,
-	}
+	mws := []mux.MiddlewareFunc{s.serviceImpl.LoggerMw}
 
 	for _, mw := range mws {
 		s.router.Use(mw)

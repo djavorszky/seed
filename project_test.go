@@ -153,7 +153,7 @@ func TestInitProject_interfaceContents(t *testing.T) {
 
 	if genString != exampleString {
 		t.Errorf(
-			"generated != expected:\nGENERATED:\n%v\n\nvs EXPECTED:\n%v",
+			"generated != expected:\n=== GENERATED ===\n%v\n=== vs EXPECTED ===\n%v",
 			genString, exampleString)
 	}
 }
@@ -179,7 +179,33 @@ func TestInitProject_executableContents(t *testing.T) {
 
 	if genString != exampleString {
 		t.Errorf(
-			"generated != expected:\nGENERATED:\n%v\n\nvs EXPECTED:\n%v",
+			"generated != expected:\n=== GENERATED ===\n%v\n=== vs EXPECTED ===\n%v",
+			genString, exampleString)
+	}
+}
+
+func TestInitProject_generatedContents(t *testing.T) {
+	generatedBytes, err :=
+		ioutil.ReadFile(filepath.Join(pwd, name, genFolder, generatedFile))
+	if err != nil {
+		t.Errorf("reading generated interface file: %v", err)
+	}
+
+	exampleBytes, err := ioutil.ReadFile(
+		filepath.Join(pwd, "testdata", "generated.expected"))
+	if err != nil {
+		t.Errorf("reading example interface file: %v", err)
+	}
+
+	genString := string(generatedBytes)
+	exampleString := string(exampleBytes)
+
+	genString = strings.ReplaceAll(genString, "\r\n", "\n")
+	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
+
+	if genString != exampleString {
+		t.Errorf(
+			"generated != expected:\n=== GENERATED ===\n%q\n=== vs EXPECTED ===\n%q",
 			genString, exampleString)
 	}
 }

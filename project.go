@@ -81,7 +81,101 @@ func InitProject(projectName string) error {
 }
 
 func createGeneratedFile(projectName string) error {
-	f := NewFile("gen")
+	f := NewFilePath("gen")
+
+	const mux = "github.com/gorilla/mux"
+
+	f.Comment("// Service is the struct that will be exposed to serve HTTP traffic.")
+	f.Type().Id("Service").Struct(
+		Id("router").Op("*").Qual(mux, "Router"),
+		Id("serviceImpl").Qual("gen", "AdmiralService"),
+	)
+
+	f.Comment("// ServeHTTP is what ultimately allows this service to be " +
+		"used by the standard library's\n// listen and serve functions")
+	f.Func().Params(
+		Id("s").Op("*").Id("Service"),
+	).Id("ServeHTTP").Params(
+		Id("w").Qual("net/http", "ResponseWriter"),
+		Id("r").Op("*").Qual("net/http", "Request"),
+	).Block(
+		Id("s").Dot("router").Dot("ServeHTTP").Call(
+			Id("w"),
+			Id("r"),
+		),
+	)
+
+	f.Comment("// Route is a struct that holds the path, the handler to " +
+		"be called when that path is hit, and\n// which list of methods it should serve.")
+
+	f.Type().Id("route").Struct(
+		Id("path").String(),
+		Id("handler").Qual("net/http", "HandlerFunc"),
+		Id("methods").Index().String(),
+	)
+
+	f.Comment("// New returns a new service implementation, using the " +
+		"service as a dependency. It also sets up the routes\n// and the middlewares.")
+
+	f.Func().Id("New").Params(
+		Id("service").Qual("gen", "AdmiralService"),
+	).Op("*").Qual("gen", "Service").Block(
+		Id("s").Op(":=").Op("&").Qual("gen", "Service").Values(
+			Dict{
+				Id("router"):      Qual(mux, "NewRouter").Call(),
+				Id("serviceImpl"): Id("service"),
+			},
+		),
+		Empty(),
+		Id("s").Dot("routes").Call(),
+		Id("s").Dot("middlewares").Call(),
+		Empty(),
+		Return(Id("s")),
+	)
+
+	f.Comment("// routes sets up the routes to be served by the service")
+	f.Func().Params(
+		Id("s").Op("*").Id("Service"),
+	).Id("routes").Params().Block(
+		Id("routes").Op(":=").Index().Id("route").Values(
+			Block(
+				Dict{
+					Id("handler"): Id("s").Dot("serviceImpl").Dot("Index").Call(),
+					Id("methods"): Index().String().Values(Qual("net/http", "MethodGet")),
+					Id("path"):    Lit("/"),
+				},
+			),
+		),
+		Empty(),
+		For(
+			List(Id("_"), Id("route")).Op(":=").Range().Id("routes").Block(
+				Id("s").Dot("router").
+					Dot("StrictSlash").Call(Lit(true)).
+					Dot("HandleFunc").
+					Call(
+						Id("route").Dot("path"), Id("route").Dot("handler")).
+					Dot("Methods").
+					Call(
+						Id("route").Dot("methods").Op("..."),
+					),
+			),
+		),
+	)
+
+	f.Comment("// middlewares sets up the middlewares to be set up by the service")
+	f.Func().Params(
+		Id("s").Op("*").Id("Service"),
+	).Id("middlewares").Params().Block(
+		Id("mws").Op(":=").Index().Qual(mux, "MiddlewareFunc").Values(
+			Id("s").Dot("serviceImpl").Dot("LoggerMw"),
+		),
+		Empty(),
+		For(
+			List(Id("_"), Id("mw")).Op(":=").Range().Id("mws").Block(
+				Id("s").Dot("router").Dot("Use").Call(Id("mw")),
+			),
+		),
+	)
 
 	path := filepath.Join(pwd, projectName, genFolder, generatedFile)
 
