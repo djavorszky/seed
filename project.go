@@ -69,8 +69,6 @@ func createDirs(paths ...[]string) error {
 	for _, path := range paths {
 		fullPath := filepath.Join(path...)
 
-		fmt.Printf("Creating %v\n", fullPath)
-
 		err := os.MkdirAll(fullPath, defaultPerm)
 		if err != nil {
 			return fmt.Errorf("creating %v failed: %v", path, err)
@@ -88,8 +86,6 @@ func createDirs(paths ...[]string) error {
 func createFiles(paths ...[]string) error {
 	for _, path := range paths {
 		fullPath := filepath.Join(path...)
-
-		fmt.Printf("Creating %v\n", fullPath)
 
 		f, err := os.Create(fullPath)
 		if err != nil {
