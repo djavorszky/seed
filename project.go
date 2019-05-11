@@ -80,28 +80,26 @@ func formatFile(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	fileName := info.Name()
-
-	if !strings.HasSuffix(fileName, ".go") {
+	if !strings.HasSuffix(info.Name(), ".go") {
 		return nil
 	}
 
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("failed reading file %s: %v",
-			fileName, err)
+			path, err)
 	}
 
 	contents, err = format.Source(contents)
 	if err != nil {
 		return fmt.Errorf("failed formatting file %s: %v",
-			fileName, err)
+			path, err)
 	}
 
 	err = ioutil.WriteFile(path, contents, defaultPerm)
 	if err != nil {
 		return fmt.Errorf("failed writing file %s: %v",
-			fileName, err)
+			path, err)
 	}
 
 	return nil
