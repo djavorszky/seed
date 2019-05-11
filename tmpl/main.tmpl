@@ -1,0 +1,12 @@
+package main
+
+import (
+{{ range .Imports }}    "{{.}}"
+{{end}}
+)
+
+func main() {
+	service := gen.New(&{{.ServicePackage}}.Server{})
+
+	log.Fatal(http.ListenAndServe("{{.ServiceAddress}}", service))
+}

@@ -15,6 +15,7 @@ const (
 	cmdFolder     = "cmd"
 	genFolder     = "gen"
 	interfaceFile = "interface.go"
+	mainFile      = "main.go"
 
 	initFailed = "init failed: %v"
 
@@ -54,9 +55,50 @@ func InitProject(projectName string) error {
 		return fmt.Errorf(initFailed, err)
 	}
 
+	err = setupMainFile(projectName)
+	if err != nil {
+		return fmt.Errorf(initFailed, err)
+	}
+
 	err = formatFiles()
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
+	}
+
+	return nil
+}
+
+func setupMainFile(projectName string) error {
+	path := filepath.Join(pwd, projectName, cmdFolder, mainFile)
+
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, defaultPerm)
+	if err != nil {
+		return fmt.Errorf("failed opening %s: %v", mainFile, err)
+	}
+	defer f.Close()
+
+	templateFile := "main.tmpl"
+	templatePath := filepath.Join(pwd, "tmpl", templateFile)
+
+	tmpl, err := template.ParseFiles(templatePath)
+	if err != nil {
+		return fmt.Errorf("failed parsing template %s: %v", templateFile, err)
+	}
+
+	main := MainStruct{
+		ServicePackage: projectName,
+		ServiceAddress: ":8080",
+		Imports: []string{
+			"log",
+			"net/http",
+			projectName,
+			fmt.Sprintf("%s/gen", projectName),
+		},
+	}
+
+	err = tmpl.Execute(f, main)
+	if err != nil {
+		return fmt.Errorf("failed executing template: %v", err)
 	}
 
 	return nil
@@ -76,11 +118,7 @@ func formatFile(path string, info os.FileInfo, err error) error {
 		return err
 	}
 
-	if info.IsDir() {
-		return nil
-	}
-
-	if !strings.HasSuffix(info.Name(), ".go") {
+	if info.IsDir() || !strings.HasSuffix(info.Name(), ".go") {
 		return nil
 	}
 

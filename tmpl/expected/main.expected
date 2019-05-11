@@ -1,0 +1,14 @@
+package main
+
+import (
+	"admiral"
+	"admiral/gen"
+	"log"
+	"net/http"
+)
+
+func main() {
+	service := gen.New(&admiral.Server{})
+
+	log.Fatal(http.ListenAndServe(":8080", service))
+}

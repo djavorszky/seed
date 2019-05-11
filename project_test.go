@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -134,9 +135,8 @@ func TestInitProject_interfaceContents(t *testing.T) {
 		t.Errorf("reading generated interface file: %v", err)
 	}
 
-	exampleBytes, err :=
-		ioutil.ReadFile(
-			filepath.Join(pwd, "example", "admiral", genFolder, interfaceFile))
+	exampleBytes, err := ioutil.ReadFile(
+		filepath.Join(pwd, "tmpl", "expected", "interface.expected"))
 	if err != nil {
 		t.Errorf("reading example interface file: %v", err)
 	}
@@ -144,9 +144,38 @@ func TestInitProject_interfaceContents(t *testing.T) {
 	genString := string(generatedBytes)
 	exampleString := string(exampleBytes)
 
+	genString = strings.ReplaceAll(genString, "\r\n", "\n")
+	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
+
 	if genString != exampleString {
 		t.Errorf(
-			"generated != example:\nGENERATED:\n%v\n\nvs EXAMPLE:\n\n%v",
+			"generated != expected:\nGENERATED:\n%v\n\nvs EXPECTED:\n%v",
+			genString, exampleString)
+	}
+}
+
+func TestInitProject_executableContents(t *testing.T) {
+	generatedBytes, err := ioutil.ReadFile(
+		filepath.Join(pwd, name, cmdFolder, mainFile))
+	if err != nil {
+		t.Errorf("reading generated main.go: %v", err)
+	}
+
+	exampleBytes, err := ioutil.ReadFile(
+		filepath.Join(pwd, "tmpl", "expected", "main.expected"))
+	if err != nil {
+		t.Errorf("reading example main.go: %v", err)
+	}
+
+	genString := string(generatedBytes)
+	exampleString := string(exampleBytes)
+
+	genString = strings.ReplaceAll(genString, "\r\n", "\n")
+	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
+
+	if genString != exampleString {
+		t.Errorf(
+			"generated != expected:\nGENERATED:\n%v\n\nvs EXPECTED:\n%v",
 			genString, exampleString)
 	}
 }
