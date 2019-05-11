@@ -9,7 +9,9 @@ import (
 
 var pwd string
 
-func init() {
+const name = "testProject"
+
+func setup() {
 	var err error
 
 	pwd, err = os.Getwd()
@@ -18,61 +20,100 @@ func init() {
 	}
 }
 
-func TestInitProject(t *testing.T) {
-	name := "testProject"
+func TestMain(m *testing.M) {
+	setup()
+	code := m.Run()
+	teardown()
+	os.Exit(code)
+}
 
-	defer teardownTestProject(t, name)
-
+// TestInitProject___doInit needs to be the first, alphabetically. This was the
+// cleanest way I could find to do an initialization within the test framework.
+func TestInitProject___doInit(t *testing.T) {
 	err := InitProject(name)
 	if err != nil {
 		t.Errorf("InitProject(%q) failed = %v", name, err)
-		return
 	}
+}
 
-	actualName, err := getDirName(name)
+func TestInitProject_foldersAreCreated(t *testing.T) {
+	projectRoot, err := getDirName(name)
 	if err != nil {
 		t.Errorf("InitProject(%q): checking result failed = %v", name, err)
-		return
 	}
 
 	// check if project folder is created
-	err = checkProjectCreated(actualName)
+	err = checkIfFolderExists(projectRoot)
 	if err != nil {
 		t.Errorf("project: %v", err)
 	}
 
-	err = checkProjectDescriptor(actualName)
+	err = checkIfFolderExists(filepath.Join(projectRoot, "cmd"))
 	if err != nil {
-		t.Errorf("project descriptor: %v", err)
+		t.Errorf("project/cmd: %v", err)
 	}
 
-	// check if foldername.go is correct
-	err = checkServiceFile(actualName)
+	err = checkIfFolderExists(filepath.Join(projectRoot, "gen"))
 	if err != nil {
-		t.Errorf("service file: %v", err)
+		t.Errorf("project/gen: %v", err)
 	}
-
 }
 
-func checkProjectDescriptor(projectName string) error {
-	filename := fmt.Sprintf("%s.yml", projectName)
-	descriptor := filepath.Join(pwd, projectName, filename)
+func TestInitProject_projectDescriptor(t *testing.T) {
+	filename := fmt.Sprintf("%s.yml", name)
+	descriptor := filepath.Join(pwd, name, filename)
 
 	f, err := os.Stat(descriptor)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("%s does not exist", descriptor)
+			t.Errorf("%s does not exist", descriptor)
 		}
 
-		return fmt.Errorf("checking %s: %v", descriptor, err)
+		t.Errorf("checking %s: %v", descriptor, err)
 	}
 
 	err = checkFileIsCorrect(f)
 	if err != nil {
-		return fmt.Errorf("checking %s: %v", descriptor, err)
+		t.Errorf("checking %s: %v", descriptor, err)
+	}
+}
+
+func TestInitProject_serviceFile(t *testing.T) {
+	filename := fmt.Sprintf("%s.go", name)
+	serviceFileName := filepath.Join(pwd, name, filename)
+
+	f, err := os.Stat(serviceFileName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			t.Errorf("%s does not exist", serviceFileName)
+		}
+
+		t.Errorf("checking %s: %v", serviceFileName, err)
 	}
 
-	return nil
+	err = checkFileIsCorrect(f)
+	if err != nil {
+		t.Errorf("checking %s: %v", serviceFileName, err)
+	}
+}
+
+func TestInitProject_interfaceFile(t *testing.T) {
+	filename := "interface.go"
+	interfaceFile := filepath.Join(pwd, name, "gen", filename)
+
+	f, err := os.Stat(interfaceFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			t.Errorf("%s does not exist", interfaceFile)
+		}
+
+		t.Errorf("checking %s: %v", interfaceFile, err)
+	}
+
+	err = checkFileIsCorrect(f)
+	if err != nil {
+		t.Errorf("checking %s: %v", interfaceFile, err)
+	}
 }
 
 func checkFileIsCorrect(f os.FileInfo) error {
@@ -80,6 +121,7 @@ func checkFileIsCorrect(f os.FileInfo) error {
 	if fileMode.IsDir() {
 		return fmt.Errorf("is a directory")
 	}
+
 	filePerm := fileMode.Perm()
 	if filePerm != defaultPerm {
 		return fmt.Errorf("expected fileperm %v, got: %v",
@@ -89,56 +131,27 @@ func checkFileIsCorrect(f os.FileInfo) error {
 	return nil
 }
 
-func checkProjectCreated(projectName string) error {
-	f, err := os.Stat(projectName)
+func checkIfFolderExists(path string) error {
+	f, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("%s folder does not exist", projectName)
+			return fmt.Errorf("%s directory does not exist", path)
 		}
 
-		return fmt.Errorf("checking %s: %v", projectName, err)
+		return fmt.Errorf("checking %s: %v", path, err)
 	}
 
-	fileMode := f.Mode()
-	if !fileMode.IsDir() {
-		return fmt.Errorf("%s: is not a directory", projectName)
-	}
-
-	filePerm := fileMode.Perm()
-	if filePerm != defaultPerm {
-		return fmt.Errorf("%s: expected fileperm %v, encountered: %v",
-			projectName, defaultPerm, filePerm)
+	if !f.IsDir() {
+		return fmt.Errorf("%s: not a directory", path)
 	}
 
 	return nil
 }
 
-func checkServiceFile(projectName string) error {
-	filename := fmt.Sprintf("%s.go", projectName)
-	serviceFileName := filepath.Join(pwd, projectName, filename)
-
-	f, err := os.Stat(serviceFileName)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("%s does not exist", serviceFileName)
-		}
-
-		return fmt.Errorf("checking %s: %v", serviceFileName, err)
-	}
-
-	err = checkFileIsCorrect(f)
-	if err != nil {
-		return fmt.Errorf("checking %s: %v", serviceFileName, err)
-	}
-
-	return nil
-}
-
-func teardownTestProject(t *testing.T, name string) {
+func teardown() {
 	dirName, err := getDirName(name)
 	if err != nil {
-		t.Errorf("teardown failed: %v", err)
-		return
+		panic(fmt.Sprintf("teardown failed: %v", err))
 	}
 
 	err = os.RemoveAll(dirName)
