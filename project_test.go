@@ -61,9 +61,11 @@ func TestInitProject_projectDescriptor(t *testing.T) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			t.Errorf("%s does not exist", descriptor)
+			return
 		}
 
 		t.Errorf("checking %s: %v", descriptor, err)
+		return
 	}
 
 	err = checkFileIsCorrect(f)
@@ -80,6 +82,7 @@ func TestInitProject_serviceFile(t *testing.T) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			t.Errorf("%s does not exist", serviceFileName)
+			return
 		}
 
 		t.Errorf("checking %s: %v", serviceFileName, err)
@@ -117,6 +120,7 @@ func TestInitProject_generatedFile(t *testing.T) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			t.Errorf("%s does not exist", interfaceFile)
+			return
 		}
 
 		t.Errorf("checking %s: %v", interfaceFile, err)
@@ -136,7 +140,7 @@ func TestInitProject_interfaceContents(t *testing.T) {
 	}
 
 	exampleBytes, err := ioutil.ReadFile(
-		filepath.Join(pwd, "tmpl", "expected", "interface.expected"))
+		filepath.Join(pwd, "testdata", "interface.expected"))
 	if err != nil {
 		t.Errorf("reading example interface file: %v", err)
 	}
@@ -162,7 +166,7 @@ func TestInitProject_executableContents(t *testing.T) {
 	}
 
 	exampleBytes, err := ioutil.ReadFile(
-		filepath.Join(pwd, "tmpl", "expected", "main.expected"))
+		filepath.Join(pwd, "testdata", "main.expected"))
 	if err != nil {
 		t.Errorf("reading example main.go: %v", err)
 	}

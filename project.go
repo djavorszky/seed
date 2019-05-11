@@ -8,13 +8,15 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"text/template"
+
+	. "github.com/dave/jennifer/jen"
 )
 
 const (
 	cmdFolder     = "cmd"
 	genFolder     = "gen"
 	interfaceFile = "interface.go"
+	generatedFile = "generated.go"
 	mainFile      = "main.go"
 
 	initFailed = "init failed: %v"
@@ -50,12 +52,22 @@ func InitProject(projectName string) error {
 		return fmt.Errorf(initFailed, err)
 	}
 
-	err = setupInterfaceFile(projectName)
+	err = createInterfaceFile(projectName)
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
 	}
 
-	err = setupMainFile(projectName)
+	err = createMainFile(projectName)
+	if err != nil {
+		return fmt.Errorf(initFailed, err)
+	}
+
+	err = createGeneratedFile(projectName)
+	if err != nil {
+		return fmt.Errorf(initFailed, err)
+	}
+
+	err = createServiceDescriptor(projectName)
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
 	}
@@ -68,37 +80,54 @@ func InitProject(projectName string) error {
 	return nil
 }
 
-func setupMainFile(projectName string) error {
+func createGeneratedFile(projectName string) error {
+	f := NewFile("gen")
+
+	path := filepath.Join(pwd, projectName, genFolder, generatedFile)
+
+	err := f.Save(path)
+	if err != nil {
+		return fmt.Errorf("saving file: %v", err)
+	}
+
+	return nil
+}
+
+func createServiceDescriptor(projectName string) error {
+	// for now, only create the file
+
+	path := filepath.Join(pwd, projectName, projectName+".yml")
+
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("failed creating project descriptor: %v", err)
+	}
+	f.Close()
+
+	return nil
+}
+
+func createMainFile(projectName string) error {
+	f := NewFile("main")
+
+	f.Func().Id("main").Params().Block(
+		Id("service").Op(":=").
+			Qual(fmt.Sprintf("%s/gen", projectName), "New").
+			Call(
+				Op("&").Qual("admiral", "Server").Values(),
+			),
+		Qual("log", "Fatal").Call(
+			Qual("net/http", "ListenAndServe").Call(
+				Lit(":8080"), Id("service"),
+			),
+		),
+	)
+
 	path := filepath.Join(pwd, projectName, cmdFolder, mainFile)
 
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, defaultPerm)
+	err := f.Save(path)
 	if err != nil {
-		return fmt.Errorf("failed opening %s: %v", mainFile, err)
-	}
-	defer f.Close()
-
-	templateFile := "main.tmpl"
-	templatePath := filepath.Join(pwd, "tmpl", templateFile)
-
-	tmpl, err := template.ParseFiles(templatePath)
-	if err != nil {
-		return fmt.Errorf("failed parsing template %s: %v", templateFile, err)
-	}
-
-	main := MainStruct{
-		ServicePackage: projectName,
-		ServiceAddress: ":8080",
-		Imports: []string{
-			"log",
-			"net/http",
-			projectName,
-			fmt.Sprintf("%s/gen", projectName),
-		},
-	}
-
-	err = tmpl.Execute(f, main)
-	if err != nil {
-		return fmt.Errorf("failed executing template: %v", err)
+		return fmt.Errorf("saving file: %v", err)
 	}
 
 	return nil
@@ -143,34 +172,46 @@ func formatFile(path string, info os.FileInfo, err error) error {
 	return nil
 }
 
-func setupInterfaceFile(projectName string) error {
+func createInterfaceFile(projectName string) error {
+	f := NewFile("gen")
+
+	title := strings.Title(projectName)
+	service := fmt.Sprintf("%sService", title)
+	handler := fmt.Sprintf("%sHandler", title)
+	middleware := fmt.Sprintf("%sMiddleware", title)
+
+	f.Commentf("// %s encapsulates the handler interface, which "+
+		"holds all the methods to be called\n// by the server, and middleware "+
+		"interface, which contains all the middlewares to be added to the service.",
+		service)
+
+	f.Type().Id(service).Interface(
+		Id(handler),
+		Id(middleware),
+	)
+
+	f.Commentf("// %s is the interface for the handlers. Any new "+
+		"endpoint added by seed will be added here as a\n// new method on "+
+		"the interface.", handler)
+
+	f.Type().Id(handler).Interface(
+		Id("Index").Params().Qual("net/http", "HandlerFunc"),
+	)
+
+	f.Commentf("// %s is the interface for all the middlewares that "+
+		"will be added to all of the paths.", middleware)
+
+	f.Type().Id(middleware).Interface(
+		Id("LoggerMw").Params(
+			Qual("net/http", "Handler"),
+		).Qual("net/http", "Handler"),
+	)
+
 	path := filepath.Join(pwd, projectName, genFolder, interfaceFile)
 
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, defaultPerm)
+	err := f.Save(path)
 	if err != nil {
-		return fmt.Errorf("failed opening %s: %v", interfaceFile, err)
-	}
-	defer f.Close()
-
-	templateFile := "interface.tmpl"
-	templatePath := filepath.Join(pwd, "tmpl", templateFile)
-
-	tmpl, err := template.ParseFiles(templatePath)
-	if err != nil {
-		return fmt.Errorf("failed parsing template %s: %v", templateFile, err)
-	}
-
-	info := InterfaceStruct{
-		PackageName: genFolder,
-		ServiceName: strings.Title(projectName),
-		Imports:     []string{"net/http"},
-		Middlewares: []string{"LoggerMw(http.Handler) http.Handler"},
-		Services:    []string{"Index() http.HandlerFunc"},
-	}
-
-	err = tmpl.Execute(f, info)
-	if err != nil {
-		return fmt.Errorf("failed executing template: %v", err)
+		return fmt.Errorf("saving file: %v", err)
 	}
 
 	return nil
@@ -180,10 +221,6 @@ func createProjectStructure(projectName string) error {
 	err := createDirs(pwd, projectName)
 	if err != nil {
 		return fmt.Errorf("creating folders: %v", err)
-	}
-	err = createFiles(pwd, projectName)
-	if err != nil {
-		return fmt.Errorf("creating files: %v", err)
 	}
 
 	return nil
@@ -208,37 +245,6 @@ func createDirs(pwd, projectName string) error {
 		if err != nil {
 			return fmt.Errorf("changing %v permissions failed: %v", path, err)
 		}
-	}
-
-	return nil
-}
-
-func createFiles(pwd, projectName string) error {
-	paths := [][]string{
-		{pwd, projectName, fmt.Sprintf("%v.go", projectName)},
-		{pwd, projectName, fmt.Sprintf("%v.yml", projectName)},
-		{pwd, projectName, cmdFolder, "main.go"},
-		{pwd, projectName, genFolder, "generated.go"},
-		{pwd, projectName, genFolder, "interface.go"},
-	}
-	for _, path := range paths {
-		fullPath := filepath.Join(path...)
-
-		f, err := os.Create(fullPath)
-		if err != nil {
-			return fmt.Errorf("creating %v failed: %v", path, err)
-		}
-
-		err = f.Close()
-		if err != nil {
-			return fmt.Errorf("closing %v failed: %v", path, err)
-		}
-
-		err = os.Chmod(fullPath, defaultPerm)
-		if err != nil {
-			return fmt.Errorf("updating %v permissions failed: %v", path, err)
-		}
-
 	}
 
 	return nil
