@@ -37,23 +37,17 @@ func TestInitProject___doInit(t *testing.T) {
 }
 
 func TestInitProject_foldersAreCreated(t *testing.T) {
-	projectRoot, err := getDirName(name)
-	if err != nil {
-		t.Errorf("InitProject(%q): checking result failed = %v", name, err)
-	}
-
-	// check if project folder is created
-	err = checkIfFolderExists(projectRoot)
+	err := checkIfFolderExists(name)
 	if err != nil {
 		t.Errorf("project: %v", err)
 	}
 
-	err = checkIfFolderExists(filepath.Join(projectRoot, cmdFolder))
+	err = checkIfFolderExists(filepath.Join(name, cmdFolder))
 	if err != nil {
 		t.Errorf("project/%s: %v", cmdFolder, err)
 	}
 
-	err = checkIfFolderExists(filepath.Join(projectRoot, genFolder))
+	err = checkIfFolderExists(filepath.Join(name, genFolder))
 	if err != nil {
 		t.Errorf("project/%s: %v", genFolder, err)
 	}
