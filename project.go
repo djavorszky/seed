@@ -43,21 +43,11 @@ func createProjectStructure(projectName string) error {
 		return err
 	}
 
-	err = createDirs(
-		[]string{pwd, projectName},
-		[]string{pwd, projectName, cmdFolder},
-		[]string{pwd, projectName, genFolder},
-	)
+	err = createDirs(pwd, projectName)
 	if err != nil {
 		return fmt.Errorf("creating folders: %v", err)
 	}
-	err = createFiles(
-		[]string{pwd, projectName, fmt.Sprintf("%v.go", projectName)},
-		[]string{pwd, projectName, fmt.Sprintf("%v.yml", projectName)},
-		[]string{pwd, projectName, cmdFolder, "main.go"},
-		[]string{pwd, projectName, genFolder, "generated.go"},
-		[]string{pwd, projectName, genFolder, "interface.go"},
-	)
+	err = createFiles(pwd, projectName)
 	if err != nil {
 		return fmt.Errorf("creating files: %v", err)
 	}
@@ -65,7 +55,13 @@ func createProjectStructure(projectName string) error {
 	return nil
 }
 
-func createDirs(paths ...[]string) error {
+func createDirs(pwd, projectName string) error {
+	paths := [][]string{
+		{pwd, projectName},
+		{pwd, projectName, cmdFolder},
+		{pwd, projectName, genFolder},
+	}
+
 	for _, path := range paths {
 		fullPath := filepath.Join(path...)
 
@@ -83,7 +79,14 @@ func createDirs(paths ...[]string) error {
 	return nil
 }
 
-func createFiles(paths ...[]string) error {
+func createFiles(pwd, projectName string) error {
+	paths := [][]string{
+		{pwd, projectName, fmt.Sprintf("%v.go", projectName)},
+		{pwd, projectName, fmt.Sprintf("%v.yml", projectName)},
+		{pwd, projectName, cmdFolder, "main.go"},
+		{pwd, projectName, genFolder, "generated.go"},
+		{pwd, projectName, genFolder, "interface.go"},
+	}
 	for _, path := range paths {
 		fullPath := filepath.Join(path...)
 
