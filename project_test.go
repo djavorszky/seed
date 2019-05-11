@@ -1,7 +1,9 @@
 package seed
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,7 +11,7 @@ import (
 
 var pwd string
 
-const name = "testProject"
+const name = "admiral"
 
 func setup() {
 	var err error
@@ -93,7 +95,7 @@ func TestInitProject_serviceFile(t *testing.T) {
 
 func TestInitProject_interfaceFile(t *testing.T) {
 	filename := "interface.go"
-	interfaceFile := filepath.Join(pwd, name, "gen", filename)
+	interfaceFile := filepath.Join(pwd, name, genFolder, filename)
 
 	f, err := os.Stat(interfaceFile)
 	if err != nil {
@@ -107,6 +109,48 @@ func TestInitProject_interfaceFile(t *testing.T) {
 	err = checkFileIsCorrect(f)
 	if err != nil {
 		t.Errorf("checking %s: %v", interfaceFile, err)
+	}
+}
+
+func TestInitProject_generatedFile(t *testing.T) {
+	filename := "generated.go"
+	interfaceFile := filepath.Join(pwd, name, genFolder, filename)
+
+	f, err := os.Stat(interfaceFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			t.Errorf("%s does not exist", interfaceFile)
+		}
+
+		t.Errorf("checking %s: %v", interfaceFile, err)
+	}
+
+	err = checkFileIsCorrect(f)
+	if err != nil {
+		t.Errorf("checking %s: %v", interfaceFile, err)
+	}
+}
+
+func TestInitProject_interfaceContents(t *testing.T) {
+	fileName := "interface.go"
+
+	generatedBytes, err :=
+		ioutil.ReadFile(filepath.Join(pwd, name, genFolder, fileName))
+	if err != nil {
+		t.Errorf("reading generated interface file: %v", err)
+	}
+
+	exampleBytes, err :=
+		ioutil.ReadFile(
+			filepath.Join(pwd, "example", "admiral", genFolder, fileName))
+	if err != nil {
+		t.Errorf("reading example interface file: %v", err)
+	}
+
+	if !bytes.Equal(generatedBytes, exampleBytes) {
+		t.Errorf(
+			"generated != example:\nGENERATED:\n%v\n\nvs EXAMPLE:\n\n%v",
+			string(generatedBytes), string(exampleBytes))
 	}
 }
 
