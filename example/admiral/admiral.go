@@ -1,13 +1,13 @@
-package example
+package admiral
 
 import (
 	"log"
 	"net/http"
 )
 
-type MyServer struct{}
+type Server struct{}
 
-func (s *MyServer) LoggerMw(next http.Handler) http.Handler {
+func (s *Server) LoggerMw(next http.Handler) http.Handler {
 	// Anything you add here will be executed once, during startup.
 	// The returned http.Handler will be able to access these variables
 	// thanks to closure.
@@ -20,7 +20,7 @@ func (s *MyServer) LoggerMw(next http.Handler) http.Handler {
 	})
 }
 
-func (s *MyServer) Index() http.HandlerFunc {
+func (s *Server) Index() http.HandlerFunc {
 	// Anything you add here will be executed once, during startup.
 	// The returned http.HandlerFunc will be able to access these variables
 	// thanks to closure.

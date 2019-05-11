@@ -3,12 +3,12 @@ package main
 import (
 	"log"
 	"net/http"
-	"seed/example"
-	"seed/example/gen"
+	"seed/example/admiral"
+	"seed/example/admiral/gen"
 )
 
 func main() {
-	service := gen.New(&example.MyServer{})
+	service := gen.New(&admiral.Server{})
 
 	log.Fatal(http.ListenAndServe(":8080", service))
 }

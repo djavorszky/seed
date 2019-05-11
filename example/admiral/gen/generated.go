@@ -9,7 +9,7 @@ import (
 // Service is the struct that will be exposed to serve HTTP traffic.
 type Service struct {
 	router      *mux.Router
-	serviceImpl NameService
+	serviceImpl AdmiralService
 }
 
 // ServeHTTP is what ultimately allows this service to be used by the standard library's
@@ -28,7 +28,7 @@ type route struct {
 
 // New returns a new service implementation, using the service as a dependency. It also sets up the routes
 // and the middlewares.
-func New(service NameService) *Service {
+func New(service AdmiralService) *Service {
 	s := &Service{
 		router:      mux.NewRouter(),
 		serviceImpl: service,
