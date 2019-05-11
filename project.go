@@ -2,14 +2,19 @@ package seed
 
 import (
 	"fmt"
+	"go/format"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
+	"text/template"
 )
 
 const (
-	cmdFolder = "cmd"
-	genFolder = "gen"
+	cmdFolder     = "cmd"
+	genFolder     = "gen"
+	interfaceFile = "interface.go"
 
 	initFailed = "init failed: %v"
 
@@ -17,7 +22,10 @@ const (
 	permLinux   = 0755
 )
 
-var defaultPerm os.FileMode
+var (
+	defaultPerm os.FileMode
+	pwd         string
+)
 
 func init() {
 	switch runtime.GOOS {
@@ -25,6 +33,13 @@ func init() {
 		defaultPerm = permWindows
 	default:
 		defaultPerm = permLinux
+	}
+
+	var err error
+
+	pwd, err = os.Getwd()
+	if err != nil {
+		panic(fmt.Sprintf("setting up pwd: %v", err))
 	}
 }
 
@@ -34,16 +49,99 @@ func InitProject(projectName string) error {
 		return fmt.Errorf(initFailed, err)
 	}
 
+	err = setupInterfaceFile(projectName)
+	if err != nil {
+		return fmt.Errorf(initFailed, err)
+	}
+
+	err = formatFiles()
+	if err != nil {
+		return fmt.Errorf(initFailed, err)
+	}
+
 	return nil
 }
 
-func createProjectStructure(projectName string) error {
-	pwd, err := os.Getwd()
+func formatFiles() error {
+	err := filepath.Walk(pwd, formatFile)
+	if err != nil {
+		return fmt.Errorf("source format: %v", err)
+	}
+
+	return nil
+}
+
+func formatFile(path string, info os.FileInfo, err error) error {
 	if err != nil {
 		return err
 	}
 
-	err = createDirs(pwd, projectName)
+	if info.IsDir() {
+		return nil
+	}
+
+	fileName := info.Name()
+
+	if !strings.HasSuffix(fileName, ".go") {
+		return nil
+	}
+
+	contents, err := ioutil.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("failed reading file %s: %v",
+			fileName, err)
+	}
+
+	contents, err = format.Source(contents)
+	if err != nil {
+		return fmt.Errorf("failed formatting file %s: %v",
+			fileName, err)
+	}
+
+	err = ioutil.WriteFile(path, contents, defaultPerm)
+	if err != nil {
+		return fmt.Errorf("failed writing file %s: %v",
+			fileName, err)
+	}
+
+	return nil
+}
+
+func setupInterfaceFile(projectName string) error {
+	path := filepath.Join(pwd, projectName, genFolder, interfaceFile)
+
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, defaultPerm)
+	if err != nil {
+		return fmt.Errorf("failed opening %s: %v", interfaceFile, err)
+	}
+	defer f.Close()
+
+	templateFile := "interface.tmpl"
+	templatePath := filepath.Join(pwd, "tmpl", templateFile)
+
+	tmpl, err := template.ParseFiles(templatePath)
+	if err != nil {
+		return fmt.Errorf("failed parsing template %s: %v", templateFile, err)
+	}
+
+	info := InterfaceStruct{
+		PackageName: genFolder,
+		ServiceName: strings.Title(projectName),
+		Imports:     []string{"net/http"},
+		Middlewares: []string{"LoggerMw(http.Handler) http.Handler"},
+		Services:    []string{"Index() http.HandlerFunc"},
+	}
+
+	err = tmpl.Execute(f, info)
+	if err != nil {
+		return fmt.Errorf("failed executing template: %v", err)
+	}
+
+	return nil
+}
+
+func createProjectStructure(projectName string) error {
+	err := createDirs(pwd, projectName)
 	if err != nil {
 		return fmt.Errorf("creating folders: %v", err)
 	}

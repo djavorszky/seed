@@ -1,15 +1,12 @@
 package seed
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 )
-
-var pwd string
 
 const name = "admiral"
 
@@ -94,8 +91,7 @@ func TestInitProject_serviceFile(t *testing.T) {
 }
 
 func TestInitProject_interfaceFile(t *testing.T) {
-	filename := "interface.go"
-	interfaceFile := filepath.Join(pwd, name, genFolder, filename)
+	interfaceFile := filepath.Join(pwd, name, genFolder, interfaceFile)
 
 	f, err := os.Stat(interfaceFile)
 	if err != nil {
@@ -132,25 +128,26 @@ func TestInitProject_generatedFile(t *testing.T) {
 }
 
 func TestInitProject_interfaceContents(t *testing.T) {
-	fileName := "interface.go"
-
 	generatedBytes, err :=
-		ioutil.ReadFile(filepath.Join(pwd, name, genFolder, fileName))
+		ioutil.ReadFile(filepath.Join(pwd, name, genFolder, interfaceFile))
 	if err != nil {
 		t.Errorf("reading generated interface file: %v", err)
 	}
 
 	exampleBytes, err :=
 		ioutil.ReadFile(
-			filepath.Join(pwd, "example", "admiral", genFolder, fileName))
+			filepath.Join(pwd, "example", "admiral", genFolder, interfaceFile))
 	if err != nil {
 		t.Errorf("reading example interface file: %v", err)
 	}
 
-	if !bytes.Equal(generatedBytes, exampleBytes) {
+	genString := string(generatedBytes)
+	exampleString := string(exampleBytes)
+
+	if genString != exampleString {
 		t.Errorf(
 			"generated != example:\nGENERATED:\n%v\n\nvs EXAMPLE:\n\n%v",
-			string(generatedBytes), string(exampleBytes))
+			genString, exampleString)
 	}
 }
 
