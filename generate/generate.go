@@ -10,40 +10,40 @@ import (
 	"seed/files"
 	"strings"
 
-	"github.com/dave/jennifer/jen"
+	. "github.com/dave/jennifer/jen"
 	"github.com/go-yaml/yaml"
 )
 
 func CreateServiceFile(projectName string) error {
-	f := jen.NewFilePath(projectName)
+	f := NewFilePath(projectName)
 
 	f.Type().Id("Server").Struct()
 
 	f.Func().Params(
-		jen.Id("s").Op("*").Id("Server"),
+		Id("s").Op("*").Id("Server"),
 	).Id("LoggerMw").Params(
-		jen.Id("next").Qual("net/http", "Handler"),
+		Id("next").Qual("net/http", "Handler"),
 	).Qual("net/http", "Handler").Block(
-		jen.Comment("// Anything you add here will be executed once, during startup."),
-		jen.Comment("// The returned http.Handler will be able to access these variables"),
-		jen.Comment("// thanks to closure."),
-		jen.Line(),
-		jen.Id("prefix").Op(":=").Lit(fmt.Sprintf("[%s] - ", projectName)),
-		jen.Return(
-			jen.Qual("net/http", "HandlerFunc").Call(
-				jen.Func().Params(
-					jen.Id("w").Qual("net/http", "ResponseWriter"),
-					jen.Id("r").Op("*").Qual("net/http", "Request"),
+		Comment("// Anything you add here will be executed once, during startup."),
+		Comment("// The returned http.Handler will be able to access these variables"),
+		Comment("// thanks to closure."),
+		Line(),
+		Id("prefix").Op(":=").Lit(fmt.Sprintf("[%s] - ", projectName)),
+		Return(
+			Qual("net/http", "HandlerFunc").Call(
+				Func().Params(
+					Id("w").Qual("net/http", "ResponseWriter"),
+					Id("r").Op("*").Qual("net/http", "Request"),
 				).Block(
-					jen.Qual("log", "Println").Call(
-						jen.Id("prefix"),
-						jen.Id("r").Dot("RemoteAddr"),
-						jen.Id("r").Dot("Method"),
-						jen.Id("r").Dot("RequestURI"),
+					Qual("log", "Println").Call(
+						Id("prefix"),
+						Id("r").Dot("RemoteAddr"),
+						Id("r").Dot("Method"),
+						Id("r").Dot("RequestURI"),
 					),
-					jen.Line(),
-					jen.Id("next").Dot("ServeHTTP").Call(
-						jen.Id("w"), jen.Id("r"),
+					Line(),
+					Id("next").Dot("ServeHTTP").Call(
+						Id("w"), Id("r"),
 					),
 				),
 			),
@@ -53,24 +53,24 @@ func CreateServiceFile(projectName string) error {
 	f.Line()
 
 	f.Func().Params(
-		jen.Id("s").Op("*").Id("Server"),
+		Id("s").Op("*").Id("Server"),
 	).Id("Index").Params().Qual("net/http", "HandlerFunc").Block(
-		jen.Comment("// Anything you add here will be executed once, during startup."),
-		jen.Comment("// The returned http.HandlerFunc will be able to access these variables"),
-		jen.Comment("// thanks to closure."),
-		jen.Line(),
-		jen.Id("defaultMsg").Op(":=").Index().Byte().Call(jen.Lit("I'm alive!")),
-		jen.Return().Func().Params(
-			jen.Id("w").Qual("net/http", "ResponseWriter"),
-			jen.Id("r").Op("*").Qual("net/http", "Request"),
+		Comment("// Anything you add here will be executed once, during startup."),
+		Comment("// The returned http.HandlerFunc will be able to access these variables"),
+		Comment("// thanks to closure."),
+		Line(),
+		Id("defaultMsg").Op(":=").Index().Byte().Call(Lit("I'm alive!")),
+		Return().Func().Params(
+			Id("w").Qual("net/http", "ResponseWriter"),
+			Id("r").Op("*").Qual("net/http", "Request"),
 		).Block(
-			jen.Id("w").Dot("WriteHeader").Call(jen.Qual("net/http", "StatusOK")),
-			jen.Line(),
-			jen.List(
-				jen.Id("_"), jen.Id("err"),
-			).Op(":=").Id("w").Dot("Write").Call(jen.Id("defaultMsg")),
-			jen.If(jen.Id("err").Op("!=").Nil()).Block(
-				jen.Panic(jen.Id("err")),
+			Id("w").Dot("WriteHeader").Call(Qual("net/http", "StatusOK")),
+			Line(),
+			List(
+				Id("_"), Id("err"),
+			).Op(":=").Id("w").Dot("Write").Call(Id("defaultMsg")),
+			If(Id("err").Op("!=").Nil()).Block(
+				Panic(Id("err")),
 			),
 		),
 	)
@@ -86,7 +86,7 @@ func CreateServiceFile(projectName string) error {
 }
 
 func CreateGeneratedFile(projectName string) error {
-	f := jen.NewFilePath("gen")
+	f := NewFilePath("gen")
 
 	projectNameTitle := strings.Title(projectName)
 
@@ -94,22 +94,22 @@ func CreateGeneratedFile(projectName string) error {
 
 	f.Comment("// Service is the struct that will be exposed to serve HTTP traffic.")
 	f.Type().Id("Service").Struct(
-		jen.Id("router").Op("*").Qual(mux, "Router"),
-		jen.Id("serviceImpl").Qual("gen", projectNameTitle+"Service"),
+		Id("router").Op("*").Qual(mux, "Router"),
+		Id("serviceImpl").Qual("gen", projectNameTitle+"Service"),
 	)
 
 	f.Comment("// ServeHTTP is what ultimately allows this service to be " +
 		"used by the standard library's")
 	f.Comment("// listen and serve functions")
 	f.Func().Params(
-		jen.Id("s").Op("*").Id("Service"),
+		Id("s").Op("*").Id("Service"),
 	).Id("ServeHTTP").Params(
-		jen.Id("w").Qual("net/http", "ResponseWriter"),
-		jen.Id("r").Op("*").Qual("net/http", "Request"),
+		Id("w").Qual("net/http", "ResponseWriter"),
+		Id("r").Op("*").Qual("net/http", "Request"),
 	).Block(
-		jen.Id("s").Dot("router").Dot("ServeHTTP").Call(
-			jen.Id("w"),
-			jen.Id("r"),
+		Id("s").Dot("router").Dot("ServeHTTP").Call(
+			Id("w"),
+			Id("r"),
 		),
 	)
 
@@ -118,9 +118,9 @@ func CreateGeneratedFile(projectName string) error {
 	f.Comment("// which list of methods it should serve.")
 
 	f.Type().Id("route").Struct(
-		jen.Id("path").String(),
-		jen.Id("handler").Qual("net/http", "HandlerFunc"),
-		jen.Id("methods").Index().String(),
+		Id("path").String(),
+		Id("handler").Qual("net/http", "HandlerFunc"),
+		Id("methods").Index().String(),
 	)
 
 	f.Comment("// New returns a new service implementation, using the " +
@@ -128,45 +128,45 @@ func CreateGeneratedFile(projectName string) error {
 	f.Comment("// and the middlewares.")
 
 	f.Func().Id("New").Params(
-		jen.Id("service").Qual("gen", projectNameTitle+"Service"),
+		Id("service").Qual("gen", projectNameTitle+"Service"),
 	).Op("*").Qual("gen", "Service").Block(
-		jen.Id("s").Op(":=").Op("&").Qual("gen", "Service").Values(
-			jen.Dict{
-				jen.Id("router"):      jen.Qual(mux, "NewRouter").Call(),
-				jen.Id("serviceImpl"): jen.Id("service"),
+		Id("s").Op(":=").Op("&").Qual("gen", "Service").Values(
+			Dict{
+				Id("router"):      Qual(mux, "NewRouter").Call(),
+				Id("serviceImpl"): Id("service"),
 			},
 		),
-		jen.Empty(),
-		jen.Id("s").Dot("routes").Call(),
-		jen.Id("s").Dot("middlewares").Call(),
-		jen.Empty(),
-		jen.Return(jen.Id("s")),
+		Empty(),
+		Id("s").Dot("routes").Call(),
+		Id("s").Dot("middlewares").Call(),
+		Empty(),
+		Return(Id("s")),
 	)
 
 	f.Comment("// routes sets up the routes to be served by the service")
 	f.Func().Params(
-		jen.Id("s").Op("*").Id("Service"),
+		Id("s").Op("*").Id("Service"),
 	).Id("routes").Params().Block(
-		jen.Id("routes").Op(":=").Index().Id("route").Values(
-			jen.Block(
-				jen.Dict{
-					jen.Id("handler"): jen.Id("s").Dot("serviceImpl").Dot("Index").Call(),
-					jen.Id("methods"): jen.Index().String().Values(jen.Qual("net/http", "MethodGet")),
-					jen.Id("path"):    jen.Lit("/"),
+		Id("routes").Op(":=").Index().Id("route").Values(
+			Block(
+				Dict{
+					Id("handler"): Id("s").Dot("serviceImpl").Dot("Index").Call(),
+					Id("methods"): Index().String().Values(Qual("net/http", "MethodGet")),
+					Id("path"):    Lit("/"),
 				},
 			),
 		),
-		jen.Empty(),
-		jen.For(
-			jen.List(jen.Id("_"), jen.Id("route")).Op(":=").Range().Id("routes").Block(
-				jen.Id("s").Dot("router").
-					Dot("StrictSlash").Call(jen.Lit(true)).
+		Empty(),
+		For(
+			List(Id("_"), Id("route")).Op(":=").Range().Id("routes").Block(
+				Id("s").Dot("router").
+					Dot("StrictSlash").Call(Lit(true)).
 					Dot("HandleFunc").
 					Call(
-						jen.Id("route").Dot("path"), jen.Id("route").Dot("handler")).
+						Id("route").Dot("path"), Id("route").Dot("handler")).
 					Dot("Methods").
 					Call(
-						jen.Id("route").Dot("methods").Op("..."),
+						Id("route").Dot("methods").Op("..."),
 					),
 			),
 		),
@@ -174,15 +174,15 @@ func CreateGeneratedFile(projectName string) error {
 
 	f.Comment("// middlewares sets up the middlewares to be set up by the service")
 	f.Func().Params(
-		jen.Id("s").Op("*").Id("Service"),
+		Id("s").Op("*").Id("Service"),
 	).Id("middlewares").Params().Block(
-		jen.Id("mws").Op(":=").Index().Qual(mux, "MiddlewareFunc").Values(
-			jen.Id("s").Dot("serviceImpl").Dot("LoggerMw"),
+		Id("mws").Op(":=").Index().Qual(mux, "MiddlewareFunc").Values(
+			Id("s").Dot("serviceImpl").Dot("LoggerMw"),
 		),
-		jen.Empty(),
-		jen.For(
-			jen.List(jen.Id("_"), jen.Id("mw")).Op(":=").Range().Id("mws").Block(
-				jen.Id("s").Dot("router").Dot("Use").Call(jen.Id("mw")),
+		Empty(),
+		For(
+			List(Id("_"), Id("mw")).Op(":=").Range().Id("mws").Block(
+				Id("s").Dot("router").Dot("Use").Call(Id("mw")),
 			),
 		),
 	)
@@ -220,17 +220,17 @@ func CreateServiceDescriptor(projectName string) error {
 }
 
 func CreateMainFile(projectName string) error {
-	f := jen.NewFile("main")
+	f := NewFile("main")
 
 	f.Func().Id("main").Params().Block(
-		jen.Id("service").Op(":=").
+		Id("service").Op(":=").
 			Qual(fmt.Sprintf("%s/gen", projectName), "New").
 			Call(
-				jen.Op("&").Qual(projectName, "Server").Values(),
+				Op("&").Qual(projectName, "Server").Values(),
 			),
-		jen.Qual("log", "Fatal").Call(
-			jen.Qual("net/http", "ListenAndServe").Call(
-				jen.Lit(":8080"), jen.Id("service"),
+		Qual("log", "Fatal").Call(
+			Qual("net/http", "ListenAndServe").Call(
+				Lit(":8080"), Id("service"),
 			),
 		),
 	)
@@ -246,7 +246,7 @@ func CreateMainFile(projectName string) error {
 }
 
 func CreateInterfaceFile(projectName string) error {
-	f := jen.NewFile("gen")
+	f := NewFile("gen")
 
 	title := strings.Title(projectName)
 	service := fmt.Sprintf("%sService", title)
@@ -259,8 +259,8 @@ func CreateInterfaceFile(projectName string) error {
 		"all the middlewares to be added to the service.")
 
 	f.Type().Id(service).Interface(
-		jen.Id(handler),
-		jen.Id(middleware),
+		Id(handler),
+		Id(middleware),
 	)
 
 	f.Commentf("// %s is the interface for the handlers. Any new "+
@@ -268,15 +268,15 @@ func CreateInterfaceFile(projectName string) error {
 	f.Comment("// new method on the interface.")
 
 	f.Type().Id(handler).Interface(
-		jen.Id("Index").Params().Qual("net/http", "HandlerFunc"),
+		Id("Index").Params().Qual("net/http", "HandlerFunc"),
 	)
 
 	f.Commentf("// %s is the interface for all the middlewares that "+
 		"will be added to all of the paths.", middleware)
 
 	f.Type().Id(middleware).Interface(
-		jen.Id("LoggerMw").Params(
-			jen.Qual("net/http", "Handler"),
+		Id("LoggerMw").Params(
+			Qual("net/http", "Handler"),
 		).Qual("net/http", "Handler"),
 	)
 
