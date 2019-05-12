@@ -88,35 +88,34 @@ func TestInitProject_executableContents(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestInitProject_generatedFile(t *testing.T) {
-	filename := "generated.go"
-	interfaceFile := filepath.Join(files.Pwd, name, consts.GenFolder, filename)
+func TestInitProject_bootstrapFile(t *testing.T) {
+	bootstrapFile := filepath.Join(files.Pwd, name, consts.GenFolder, consts.BootstrapFile)
 
-	f, err := os.Stat(interfaceFile)
+	f, err := os.Stat(bootstrapFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			t.Errorf("%s does not exist", interfaceFile)
+			t.Errorf("%s does not exist", bootstrapFile)
 			return
 		}
 
-		t.Errorf("checking %s: %v", interfaceFile, err)
+		t.Errorf("checking %s: %v", bootstrapFile, err)
 	}
 
 	err = checkFileIsCorrect(f)
 	if err != nil {
-		t.Errorf("checking %s: %v", interfaceFile, err)
+		t.Errorf("checking %s: %v", bootstrapFile, err)
 	}
 }
 
-func TestInitProject_generatedContents(t *testing.T) {
-	path := filepath.Join(files.Pwd, name, consts.GenFolder, consts.GeneratedFile)
+func TestInitProject_bootstrapContents(t *testing.T) {
+	path := filepath.Join(files.Pwd, name, consts.GenFolder, consts.BootstrapFile)
 
 	actual, err := readFile(path)
 	if err != nil {
 		t.Errorf("reading result file for %q: %v", "go.mod", err)
 	}
 
-	expected, err := parseExpected("generated.expected", name)
+	expected, err := parseExpected("bootstrap.expected", name)
 	if err != nil {
 		t.Errorf("parsing expected file: %v", err)
 	}
@@ -207,8 +206,7 @@ func TestInitProject_goModFileContents(t *testing.T) {
 }
 
 func TestInitProject_serviceFile(t *testing.T) {
-	filename := fmt.Sprintf("%s.go", name)
-	serviceFile := filepath.Join(files.Pwd, name, filename)
+	serviceFile := filepath.Join(files.Pwd, name, name+".go")
 
 	f, err := os.Stat(serviceFile)
 	if err != nil {

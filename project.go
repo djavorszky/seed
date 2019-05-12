@@ -40,8 +40,8 @@ func InitProject(projectName string) error {
 			saveTo: filepath.Join(files.Pwd, projectName, consts.GenFolder, consts.InterfaceFile),
 		},
 		{
-			exec:   generate.GeneratedFile,
-			saveTo: filepath.Join(files.Pwd, projectName, consts.GenFolder, consts.GeneratedFile),
+			exec:   generate.BootstrapFile,
+			saveTo: filepath.Join(files.Pwd, projectName, consts.GenFolder, consts.BootstrapFile),
 		},
 		{
 			exec:   generate.MainFile,

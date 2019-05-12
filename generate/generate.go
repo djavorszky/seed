@@ -85,7 +85,7 @@ func ServiceFile(projectName string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func GeneratedFile(projectName string) ([]byte, error) {
+func BootstrapFile(projectName string) ([]byte, error) {
 	f := NewFilePath("gen")
 
 	projectNameTitle := strings.Title(projectName)
