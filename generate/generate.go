@@ -14,7 +14,7 @@ import (
 	"github.com/go-yaml/yaml"
 )
 
-func CreateServiceFile(projectName string) error {
+func ServiceFile(projectName string) error {
 	f := NewFilePath(projectName)
 
 	f.Type().Id("Server").Struct()
@@ -85,7 +85,7 @@ func CreateServiceFile(projectName string) error {
 	return nil
 }
 
-func CreateGeneratedFile(projectName string) error {
+func GeneratedFile(projectName string) error {
 	f := NewFilePath("gen")
 
 	projectNameTitle := strings.Title(projectName)
@@ -197,7 +197,7 @@ func CreateGeneratedFile(projectName string) error {
 	return nil
 }
 
-func CreateServiceDescriptor(projectName string) error {
+func ServiceDescriptor(projectName string) error {
 	desc := descriptor.Base(descriptor.Info{
 		Name:    projectName,
 		Summary: "just a test for now",
@@ -219,7 +219,7 @@ func CreateServiceDescriptor(projectName string) error {
 	return nil
 }
 
-func CreateMainFile(projectName string) error {
+func MainFile(projectName string) error {
 	f := NewFile("main")
 
 	f.Func().Id("main").Params().Block(
@@ -245,7 +245,7 @@ func CreateMainFile(projectName string) error {
 	return nil
 }
 
-func CreateInterfaceFile(projectName string) error {
+func InterfaceFile(projectName string) error {
 	f := NewFile("gen")
 
 	title := strings.Title(projectName)

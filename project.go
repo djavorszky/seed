@@ -21,27 +21,27 @@ func InitProject(projectName string) error {
 		return fmt.Errorf(initFailed, err)
 	}
 
-	err = generate.CreateInterfaceFile(projectName)
+	err = generate.InterfaceFile(projectName)
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
 	}
 
-	err = generate.CreateServiceFile(projectName)
+	err = generate.ServiceFile(projectName)
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
 	}
 
-	err = generate.CreateMainFile(projectName)
+	err = generate.MainFile(projectName)
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
 	}
 
-	err = generate.CreateGeneratedFile(projectName)
+	err = generate.GeneratedFile(projectName)
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
 	}
 
-	err = generate.CreateServiceDescriptor(projectName)
+	err = generate.ServiceDescriptor(projectName)
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
 	}
