@@ -10,8 +10,9 @@ import (
 	"seed/files"
 	"strings"
 
-	. "github.com/dave/jennifer/jen"
 	"github.com/go-yaml/yaml"
+
+	. "github.com/dave/jennifer/jen"
 )
 
 func ServiceFile(projectName string) ([]byte, error) {
@@ -31,10 +32,7 @@ func ServiceFile(projectName string) ([]byte, error) {
 		Id("prefix").Op(":=").Lit(fmt.Sprintf("[%s] - ", projectName)),
 		Return(
 			Qual("net/http", "HandlerFunc").Call(
-				Func().Params(
-					Id("w").Qual("net/http", "ResponseWriter"),
-					Id("r").Op("*").Qual("net/http", "Request"),
-				).Block(
+				Add(httpHandlerFunc()).Block(
 					Qual("log", "Println").Call(
 						Id("prefix"),
 						Id("r").Dot("RemoteAddr"),
@@ -60,17 +58,16 @@ func ServiceFile(projectName string) ([]byte, error) {
 		Comment("// thanks to closure."),
 		Line(),
 		Id("defaultMsg").Op(":=").Index().Byte().Call(Lit("I'm alive!")),
-		Return().Func().Params(
-			Id("w").Qual("net/http", "ResponseWriter"),
-			Id("r").Op("*").Qual("net/http", "Request"),
-		).Block(
-			Id("w").Dot("WriteHeader").Call(Qual("net/http", "StatusOK")),
-			Line(),
-			List(
-				Id("_"), Id("err"),
-			).Op(":=").Id("w").Dot("Write").Call(Id("defaultMsg")),
-			If(Id("err").Op("!=").Nil()).Block(
-				Panic(Id("err")),
+		Return().Add(
+			httpHandlerFunc().Block(
+				Id("w").Dot("WriteHeader").Call(Qual("net/http", "StatusOK")),
+				Line(),
+				List(
+					Id("_"), Id("err"),
+				).Op(":=").Id("w").Dot("Write").Call(Id("defaultMsg")),
+				If(Id("err").Op("!=").Nil()).Block(
+					Panic(Id("err")),
+				),
 			),
 		),
 	)
@@ -103,10 +100,7 @@ func BootstrapFile(projectName string) ([]byte, error) {
 	f.Comment("// listen and serve functions")
 	f.Func().Params(
 		Id("s").Op("*").Id("Service"),
-	).Id("ServeHTTP").Params(
-		Id("w").Qual("net/http", "ResponseWriter"),
-		Id("r").Op("*").Qual("net/http", "Request"),
-	).Block(
+	).Id("ServeHTTP").Add(httpMethodParams()).Block(
 		Id("s").Dot("router").Dot("ServeHTTP").Call(
 			Id("w"),
 			Id("r"),
@@ -195,28 +189,6 @@ func BootstrapFile(projectName string) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
-}
-
-func ServiceDescriptor(projectName string) error {
-	desc := descriptor.Base(descriptor.Info{
-		Name:    projectName,
-		Summary: "just a test for now",
-	})
-
-	path := filepath.Join(files.Pwd, projectName, projectName+".yml")
-
-	f, err := os.Create(path)
-	if err != nil {
-		return fmt.Errorf("failed creating project descriptor: %v", err)
-	}
-	defer f.Close()
-
-	err = yaml.NewEncoder(f).Encode(&desc)
-	if err != nil {
-		return fmt.Errorf("failed creating descriptor: %v", err)
-	}
-
-	return nil
 }
 
 func MainFile(projectName string) ([]byte, error) {
@@ -323,6 +295,28 @@ func createDirs(pwd, projectName string) error {
 	return nil
 }
 
+func ServiceDescriptor(projectName string) error {
+	desc := descriptor.Base(descriptor.Info{
+		Name:    projectName,
+		Summary: "just a test for now",
+	})
+
+	path := filepath.Join(files.Pwd, projectName, projectName+".yml")
+
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("failed creating project descriptor: %v", err)
+	}
+	defer f.Close()
+
+	err = yaml.NewEncoder(f).Encode(&desc)
+	if err != nil {
+		return fmt.Errorf("failed creating descriptor: %v", err)
+	}
+
+	return nil
+}
+
 func GoModule(projectName string) ([]byte, error) {
 	goModContents := fmt.Sprintf(`module %s
 
@@ -332,4 +326,15 @@ require github.com/gorilla/mux v1.7.1
 `, projectName)
 
 	return []byte(goModContents), nil
+}
+
+func httpHandlerFunc() *Statement {
+	return Func().Add(httpMethodParams())
+}
+
+func httpMethodParams() *Statement {
+	return Params(
+		Id("w").Qual("net/http", "ResponseWriter"),
+		Id("r").Op("*").Qual("net/http", "Request"),
+	)
 }
