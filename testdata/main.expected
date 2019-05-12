@@ -1,13 +1,13 @@
 package main
 
 import (
-	admiral "admiral"
-	gen "admiral/gen"
+	{{.Package}} "{{.Package}}"
+	gen "{{.Package}}/gen"
 	"log"
 	"net/http"
 )
 
 func main() {
-	service := gen.New(&admiral.Server{})
+	service := gen.New(&{{.Package}}.Server{})
 	log.Fatal(http.ListenAndServe(":8080", service))
 }

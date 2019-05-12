@@ -1,4 +1,4 @@
-package admiral
+package {{.Package}}
 
 import (
 	"log"
@@ -12,7 +12,7 @@ func (s *Server) LoggerMw(next http.Handler) http.Handler {
 	// The returned http.Handler will be able to access these variables
 	// thanks to closure.
 
-	prefix := "[admiral] - "
+	prefix := "[{{.Package}}] - "
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println(prefix, r.RemoteAddr, r.Method, r.RequestURI)
 

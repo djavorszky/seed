@@ -1,4 +1,4 @@
-module admiral
+module {{.Package}}
 
 go 1.12
 

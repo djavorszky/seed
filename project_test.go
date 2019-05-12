@@ -1,7 +1,9 @@
 package seed
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const name = "admiral"
+const name = "example2"
 
 func setup() {
 	var err error
@@ -99,25 +101,19 @@ func TestInitProject_goModFile(t *testing.T) {
 	}
 }
 func TestInitProject_goModFileContents(t *testing.T) {
-	generatedBytes, err :=
-		ioutil.ReadFile(filepath.Join(pwd, name, "go.mod"))
+	path := filepath.Join(pwd, name, "go.mod")
+
+	actual, err := readFile(path)
 	if err != nil {
-		t.Errorf("reading generated interface file: %v", err)
+		t.Errorf("reading result file for %q: %v", "go.mod", err)
 	}
 
-	exampleBytes, err := ioutil.ReadFile(
-		filepath.Join(pwd, "testdata", "gomod.expected"))
+	expected, err := parseExpected("gomod.expected", name)
 	if err != nil {
-		t.Errorf("reading example interface file: %v", err)
+		t.Errorf("parsing expected file: %v", err)
 	}
 
-	genString := string(generatedBytes)
-	exampleString := string(exampleBytes)
-
-	genString = strings.ReplaceAll(genString, "\r\n", "\n")
-	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
-
-	assert.Equal(t, exampleString, genString)
+	assert.Equal(t, expected, actual)
 }
 
 func TestInitProject_projectDescriptorContents(t *testing.T) {
@@ -166,27 +162,19 @@ func TestInitProject_serviceFile(t *testing.T) {
 }
 
 func TestInitProject_serviceFileContents(t *testing.T) {
-	filename := fmt.Sprintf("%s.go", name)
+	path := filepath.Join(pwd, name, name+".go")
 
-	generatedBytes, err :=
-		ioutil.ReadFile(filepath.Join(pwd, name, filename))
+	actual, err := readFile(path)
 	if err != nil {
-		t.Errorf("reading generated service file: %v", err)
+		t.Errorf("reading result file for %q: %v", "go.mod", err)
 	}
 
-	exampleBytes, err := ioutil.ReadFile(
-		filepath.Join(pwd, "testdata", "service.expected"))
+	expected, err := parseExpected("service.expected", name)
 	if err != nil {
-		t.Errorf("reading example service file: %v", err)
+		t.Errorf("parsing expected file: %v", err)
 	}
 
-	genString := string(generatedBytes)
-	exampleString := string(exampleBytes)
-
-	genString = strings.ReplaceAll(genString, "\r\n", "\n")
-	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
-
-	assert.Equal(t, exampleString, genString)
+	assert.Equal(t, expected, actual)
 }
 
 func TestInitProject_interfaceFile(t *testing.T) {
@@ -228,69 +216,51 @@ func TestInitProject_generatedFile(t *testing.T) {
 }
 
 func TestInitProject_interfaceContents(t *testing.T) {
-	generatedBytes, err :=
-		ioutil.ReadFile(filepath.Join(pwd, name, genFolder, interfaceFile))
+	path := filepath.Join(pwd, name, genFolder, interfaceFile)
+
+	actual, err := readFile(path)
 	if err != nil {
-		t.Errorf("reading generated interface file: %v", err)
+		t.Errorf("reading result file for %q: %v", "go.mod", err)
 	}
 
-	exampleBytes, err := ioutil.ReadFile(
-		filepath.Join(pwd, "testdata", "interface.expected"))
+	expected, err := parseExpected("interface.expected", name)
 	if err != nil {
-		t.Errorf("reading example interface file: %v", err)
+		t.Errorf("parsing expected file: %v", err)
 	}
 
-	genString := string(generatedBytes)
-	exampleString := string(exampleBytes)
-
-	genString = strings.ReplaceAll(genString, "\r\n", "\n")
-	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
-
-	assert.Equal(t, exampleString, genString)
+	assert.Equal(t, expected, actual)
 }
 
 func TestInitProject_executableContents(t *testing.T) {
-	generatedBytes, err := ioutil.ReadFile(
-		filepath.Join(pwd, name, cmdFolder, mainFile))
+	path := filepath.Join(pwd, name, cmdFolder, mainFile)
+
+	actual, err := readFile(path)
 	if err != nil {
-		t.Errorf("reading generated main.go: %v", err)
+		t.Errorf("reading result file for %q: %v", "go.mod", err)
 	}
 
-	exampleBytes, err := ioutil.ReadFile(
-		filepath.Join(pwd, "testdata", "main.expected"))
+	expected, err := parseExpected("main.expected", name)
 	if err != nil {
-		t.Errorf("reading example main.go: %v", err)
+		t.Errorf("parsing expected file: %v", err)
 	}
 
-	genString := string(generatedBytes)
-	exampleString := string(exampleBytes)
-
-	genString = strings.ReplaceAll(genString, "\r\n", "\n")
-	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
-
-	assert.Equal(t, exampleString, genString)
+	assert.Equal(t, expected, actual)
 }
 
 func TestInitProject_generatedContents(t *testing.T) {
-	generatedBytes, err :=
-		ioutil.ReadFile(filepath.Join(pwd, name, genFolder, generatedFile))
+	path := filepath.Join(pwd, name, genFolder, generatedFile)
+
+	actual, err := readFile(path)
 	if err != nil {
-		t.Errorf("reading generated interface file: %v", err)
+		t.Errorf("reading result file for %q: %v", "go.mod", err)
 	}
 
-	exampleBytes, err := ioutil.ReadFile(
-		filepath.Join(pwd, "testdata", "generated.expected"))
+	expected, err := parseExpected("generated.expected", name)
 	if err != nil {
-		t.Errorf("reading example interface file: %v", err)
+		t.Errorf("parsing expected file: %v", err)
 	}
 
-	genString := string(generatedBytes)
-	exampleString := string(exampleBytes)
-
-	genString = strings.ReplaceAll(genString, "\r\n", "\n")
-	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
-
-	assert.Equal(t, exampleString, genString)
+	assert.Equal(t, expected, actual)
 }
 
 func checkFileIsCorrect(f os.FileInfo) error {
@@ -348,4 +318,41 @@ func getDirName(name string) (string, error) {
 	}
 
 	return filepath.Base(pwd), nil
+}
+
+func parseExpected(filename, projectName string) (string, error) {
+	path := filepath.Join(pwd, "testdata", filename)
+
+	tmpl, err := template.ParseFiles(path)
+	if err != nil {
+		return "", fmt.Errorf("failed parsing template %q: %v", filename, err)
+	}
+
+	details := struct {
+		Package string
+		Title   string
+	}{
+		Package: projectName,
+		Title:   strings.Title(projectName),
+	}
+
+	var buf bytes.Buffer
+
+	err = tmpl.Execute(&buf, details)
+	if err != nil {
+		return "", fmt.Errorf("failed parsing template %q: %v", filename, err)
+	}
+
+	result := strings.ReplaceAll(buf.String(), "\r\n", "\n")
+
+	return result, nil
+}
+
+func readFile(path string) (string, error) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("failed reading %q: %v", path, err)
+	}
+
+	return strings.ReplaceAll(string(b), "\r\n", "\n"), nil
 }
