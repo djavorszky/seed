@@ -7,7 +7,10 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"seed/descriptor"
 	"strings"
+
+	"github.com/go-yaml/yaml"
 
 	. "github.com/dave/jennifer/jen"
 )
@@ -264,7 +267,11 @@ func createGeneratedFile(projectName string) error {
 }
 
 func createServiceDescriptor(projectName string) error {
-	// TODO: for now, only create the file
+
+	desc := descriptor.Base(descriptor.Info{
+		Name:    projectName,
+		Summary: "just a test for now",
+	})
 
 	path := filepath.Join(pwd, projectName, projectName+".yml")
 
@@ -272,7 +279,12 @@ func createServiceDescriptor(projectName string) error {
 	if err != nil {
 		return fmt.Errorf("failed creating project descriptor: %v", err)
 	}
-	f.Close()
+	defer f.Close()
+
+	err = yaml.NewEncoder(f).Encode(&desc)
+	if err != nil {
+		return fmt.Errorf("failed creating descriptor: %v", err)
+	}
 
 	return nil
 }
