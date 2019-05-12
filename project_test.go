@@ -7,7 +7,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"seed/consts"
 	"seed/descriptor"
+	"seed/files"
 	"strings"
 	"testing"
 
@@ -18,17 +20,8 @@ import (
 
 const name = "example2"
 
-func setup() {
-	var err error
-
-	pwd, err = os.Getwd()
-	if err != nil {
-		panic(fmt.Sprintf("unable to get pwd: %v", err))
-	}
-}
-
 func TestMain(m *testing.M) {
-	setup()
+	//setup()
 	code := m.Run()
 	teardown()
 	os.Exit(code)
@@ -49,19 +42,19 @@ func TestInitProject_foldersAreCreated(t *testing.T) {
 		t.Errorf("project: %v", err)
 	}
 
-	err = checkIfFolderExists(filepath.Join(name, cmdFolder))
+	err = checkIfFolderExists(filepath.Join(name, consts.CmdFolder))
 	if err != nil {
-		t.Errorf("project/%s: %v", cmdFolder, err)
+		t.Errorf("project/%s: %v", consts.CmdFolder, err)
 	}
 
-	err = checkIfFolderExists(filepath.Join(name, genFolder))
+	err = checkIfFolderExists(filepath.Join(name, consts.GenFolder))
 	if err != nil {
-		t.Errorf("project/%s: %v", genFolder, err)
+		t.Errorf("project/%s: %v", consts.GenFolder, err)
 	}
 }
 
 func TestInitProject_executableFile(t *testing.T) {
-	mainPath := filepath.Join(pwd, name, cmdFolder, mainFile)
+	mainPath := filepath.Join(files.Pwd, name, consts.CmdFolder, consts.MainFile)
 
 	f, err := os.Stat(mainPath)
 	if err != nil {
@@ -80,7 +73,7 @@ func TestInitProject_executableFile(t *testing.T) {
 }
 
 func TestInitProject_executableContents(t *testing.T) {
-	path := filepath.Join(pwd, name, cmdFolder, mainFile)
+	path := filepath.Join(files.Pwd, name, consts.CmdFolder, consts.MainFile)
 
 	actual, err := readFile(path)
 	if err != nil {
@@ -97,7 +90,7 @@ func TestInitProject_executableContents(t *testing.T) {
 
 func TestInitProject_generatedFile(t *testing.T) {
 	filename := "generated.go"
-	interfaceFile := filepath.Join(pwd, name, genFolder, filename)
+	interfaceFile := filepath.Join(files.Pwd, name, consts.GenFolder, filename)
 
 	f, err := os.Stat(interfaceFile)
 	if err != nil {
@@ -116,7 +109,7 @@ func TestInitProject_generatedFile(t *testing.T) {
 }
 
 func TestInitProject_generatedContents(t *testing.T) {
-	path := filepath.Join(pwd, name, genFolder, generatedFile)
+	path := filepath.Join(files.Pwd, name, consts.GenFolder, consts.GeneratedFile)
 
 	actual, err := readFile(path)
 	if err != nil {
@@ -133,7 +126,7 @@ func TestInitProject_generatedContents(t *testing.T) {
 
 func TestInitProject_projectDescriptor(t *testing.T) {
 	filename := fmt.Sprintf("%s.yml", name)
-	d := filepath.Join(pwd, name, filename)
+	d := filepath.Join(files.Pwd, name, filename)
 
 	f, err := os.Stat(d)
 	if err != nil {
@@ -154,7 +147,7 @@ func TestInitProject_projectDescriptor(t *testing.T) {
 
 func TestInitProject_projectDescriptorContents(t *testing.T) {
 	filename := fmt.Sprintf("%s.yml", name)
-	d := filepath.Join(pwd, name, filename)
+	d := filepath.Join(files.Pwd, name, filename)
 
 	b, err := ioutil.ReadFile(d)
 	if err != nil {
@@ -179,7 +172,7 @@ func TestInitProject_projectDescriptorContents(t *testing.T) {
 }
 
 func TestInitProject_goModFile(t *testing.T) {
-	d := filepath.Join(pwd, name, "go.mod")
+	d := filepath.Join(files.Pwd, name, "go.mod")
 
 	f, err := os.Stat(d)
 	if err != nil {
@@ -198,7 +191,7 @@ func TestInitProject_goModFile(t *testing.T) {
 	}
 }
 func TestInitProject_goModFileContents(t *testing.T) {
-	path := filepath.Join(pwd, name, "go.mod")
+	path := filepath.Join(files.Pwd, name, "go.mod")
 
 	actual, err := readFile(path)
 	if err != nil {
@@ -215,7 +208,7 @@ func TestInitProject_goModFileContents(t *testing.T) {
 
 func TestInitProject_serviceFile(t *testing.T) {
 	filename := fmt.Sprintf("%s.go", name)
-	serviceFile := filepath.Join(pwd, name, filename)
+	serviceFile := filepath.Join(files.Pwd, name, filename)
 
 	f, err := os.Stat(serviceFile)
 	if err != nil {
@@ -233,7 +226,7 @@ func TestInitProject_serviceFile(t *testing.T) {
 }
 
 func TestInitProject_serviceFileContents(t *testing.T) {
-	path := filepath.Join(pwd, name, name+".go")
+	path := filepath.Join(files.Pwd, name, name+".go")
 
 	actual, err := readFile(path)
 	if err != nil {
@@ -249,7 +242,7 @@ func TestInitProject_serviceFileContents(t *testing.T) {
 }
 
 func TestInitProject_interfaceFile(t *testing.T) {
-	interfaceFile := filepath.Join(pwd, name, genFolder, interfaceFile)
+	interfaceFile := filepath.Join(files.Pwd, name, consts.GenFolder, consts.InterfaceFile)
 
 	f, err := os.Stat(interfaceFile)
 	if err != nil {
@@ -267,7 +260,7 @@ func TestInitProject_interfaceFile(t *testing.T) {
 }
 
 func TestInitProject_interfaceContents(t *testing.T) {
-	path := filepath.Join(pwd, name, genFolder, interfaceFile)
+	path := filepath.Join(files.Pwd, name, consts.GenFolder, consts.InterfaceFile)
 
 	actual, err := readFile(path)
 	if err != nil {
@@ -289,9 +282,9 @@ func checkFileIsCorrect(f os.FileInfo) error {
 	}
 
 	filePerm := fileMode.Perm()
-	if filePerm != defaultPerm {
+	if filePerm != files.DefaultPerm {
 		return fmt.Errorf("expected fileperm %v, got: %v",
-			defaultPerm, filePerm)
+			files.DefaultPerm, filePerm)
 	}
 
 	return nil
@@ -340,7 +333,7 @@ func getDirName(name string) (string, error) {
 }
 
 func parseExpected(filename, projectName string) (string, error) {
-	path := filepath.Join(pwd, "testdata", filename)
+	path := filepath.Join(files.Pwd, "testdata", filename)
 
 	tmpl, err := template.ParseFiles(path)
 	if err != nil {
