@@ -162,12 +162,14 @@ func createServiceFile(projectName string) error {
 func createGeneratedFile(projectName string) error {
 	f := NewFilePath("gen")
 
+	projectNameTitle := strings.Title(projectName)
+
 	const mux = "github.com/gorilla/mux"
 
 	f.Comment("// Service is the struct that will be exposed to serve HTTP traffic.")
 	f.Type().Id("Service").Struct(
 		Id("router").Op("*").Qual(mux, "Router"),
-		Id("serviceImpl").Qual("gen", "AdmiralService"),
+		Id("serviceImpl").Qual("gen", projectNameTitle+"Service"),
 	)
 
 	f.Comment("// ServeHTTP is what ultimately allows this service to be " +
@@ -197,7 +199,7 @@ func createGeneratedFile(projectName string) error {
 		"service as a dependency. It also sets up the routes\n// and the middlewares.")
 
 	f.Func().Id("New").Params(
-		Id("service").Qual("gen", "AdmiralService"),
+		Id("service").Qual("gen", projectNameTitle+"Service"),
 	).Op("*").Qual("gen", "Service").Block(
 		Id("s").Op(":=").Op("&").Qual("gen", "Service").Values(
 			Dict{
@@ -267,7 +269,6 @@ func createGeneratedFile(projectName string) error {
 }
 
 func createServiceDescriptor(projectName string) error {
-
 	desc := descriptor.Base(descriptor.Info{
 		Name:    projectName,
 		Summary: "just a test for now",
@@ -296,7 +297,7 @@ func createMainFile(projectName string) error {
 		Id("service").Op(":=").
 			Qual(fmt.Sprintf("%s/gen", projectName), "New").
 			Call(
-				Op("&").Qual("admiral", "Server").Values(),
+				Op("&").Qual(projectName, "Server").Values(),
 			),
 		Qual("log", "Fatal").Call(
 			Qual("net/http", "ListenAndServe").Call(

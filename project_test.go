@@ -5,8 +5,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"seed/descriptor"
 	"strings"
 	"testing"
+
+	"github.com/go-yaml/yaml"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -74,8 +77,32 @@ func TestInitProject_projectDescriptor(t *testing.T) {
 	if err != nil {
 		t.Errorf("checking %s: %v", descriptor, err)
 	}
+}
 
-	t.Errorf("test is not complete yet.")
+func TestInitProject_projectDescriptorContents(t *testing.T) {
+	filename := fmt.Sprintf("%s.yml", name)
+	d := filepath.Join(pwd, name, filename)
+
+	b, err := ioutil.ReadFile(d)
+	if err != nil {
+		t.Errorf("failed reading descriptor: %v", err)
+	}
+
+	var sd descriptor.ServiceDescriptor
+
+	err = yaml.Unmarshal(b, &sd)
+	if err != nil {
+		t.Errorf("failed unmarshalling descriptor: %v", err)
+	}
+
+	info := descriptor.Info{
+		Name:    name,
+		Summary: "just a test for now",
+	}
+
+	expected := descriptor.Base(info)
+
+	assert.Equal(t, expected, sd)
 }
 
 func TestInitProject_serviceFile(t *testing.T) {
