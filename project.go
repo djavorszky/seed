@@ -80,9 +80,30 @@ func InitProject(projectName string) error {
 		return fmt.Errorf(initFailed, err)
 	}
 
-	err = formatFiles()
+	err = initGoModule(projectName)
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
+	}
+
+	err = formatFiles(projectName)
+	if err != nil {
+		return fmt.Errorf(initFailed, err)
+	}
+
+	return nil
+}
+
+func initGoModule(projectName string) error {
+	goModContents := fmt.Sprintf(`module %s
+
+go 1.12
+
+require github.com/gorilla/mux v1.7.1
+`, projectName)
+
+	err := ioutil.WriteFile(filepath.Join(pwd, projectName, "go.mod"), []byte(goModContents), defaultPerm)
+	if err != nil {
+		return fmt.Errorf("failed creating go.mod file: %v", err)
 	}
 
 	return nil
@@ -316,8 +337,10 @@ func createMainFile(projectName string) error {
 	return nil
 }
 
-func formatFiles() error {
-	err := filepath.Walk(pwd, formatFile)
+func formatFiles(projectName string) error {
+	project := filepath.Join(pwd, projectName)
+
+	err := filepath.Walk(project, formatFile)
 	if err != nil {
 		return fmt.Errorf("source format: %v", err)
 	}

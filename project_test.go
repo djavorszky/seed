@@ -60,23 +60,64 @@ func TestInitProject_foldersAreCreated(t *testing.T) {
 
 func TestInitProject_projectDescriptor(t *testing.T) {
 	filename := fmt.Sprintf("%s.yml", name)
-	descriptor := filepath.Join(pwd, name, filename)
+	d := filepath.Join(pwd, name, filename)
 
-	f, err := os.Stat(descriptor)
+	f, err := os.Stat(d)
 	if err != nil {
 		if os.IsNotExist(err) {
-			t.Errorf("%s does not exist", descriptor)
+			t.Errorf("%s does not exist", d)
 			return
 		}
 
-		t.Errorf("checking %s: %v", descriptor, err)
+		t.Errorf("checking %s: %v", d, err)
 		return
 	}
 
 	err = checkFileIsCorrect(f)
 	if err != nil {
-		t.Errorf("checking %s: %v", descriptor, err)
+		t.Errorf("checking %s: %v", d, err)
 	}
+}
+
+func TestInitProject_goModFile(t *testing.T) {
+	d := filepath.Join(pwd, name, "go.mod")
+
+	f, err := os.Stat(d)
+	if err != nil {
+		if os.IsNotExist(err) {
+			t.Errorf("%s does not exist", d)
+			return
+		}
+
+		t.Errorf("checking %s: %v", d, err)
+		return
+	}
+
+	err = checkFileIsCorrect(f)
+	if err != nil {
+		t.Errorf("checking %s: %v", d, err)
+	}
+}
+func TestInitProject_goModFileContents(t *testing.T) {
+	generatedBytes, err :=
+		ioutil.ReadFile(filepath.Join(pwd, name, "go.mod"))
+	if err != nil {
+		t.Errorf("reading generated interface file: %v", err)
+	}
+
+	exampleBytes, err := ioutil.ReadFile(
+		filepath.Join(pwd, "testdata", "gomod.expected"))
+	if err != nil {
+		t.Errorf("reading example interface file: %v", err)
+	}
+
+	genString := string(generatedBytes)
+	exampleString := string(exampleBytes)
+
+	genString = strings.ReplaceAll(genString, "\r\n", "\n")
+	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
+
+	assert.Equal(t, exampleString, genString)
 }
 
 func TestInitProject_projectDescriptorContents(t *testing.T) {
