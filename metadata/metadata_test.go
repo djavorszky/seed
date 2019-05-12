@@ -1,4 +1,4 @@
-package descriptor
+package metadata
 
 import (
 	"testing"
@@ -13,12 +13,12 @@ func TestBase(t *testing.T) {
 		Description: "testDescription",
 	}
 
-	expectedDesc := defaultDescriptor
-	expectedDesc.Info = testInfo
+	expected := defMetadata
+	expected.Info = testInfo
 
 	actual := Base(testInfo)
 
-	assert.Equal(t, expectedDesc, actual)
+	assert.Equal(t, expected, actual)
 
 	assert.NotNil(t, actual.Routes)
 	assert.NotNil(t, actual.Middlwares)

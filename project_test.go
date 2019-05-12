@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"seed/consts"
-	"seed/descriptor"
 	"seed/files"
+	"seed/metadata"
 	"strings"
 	"testing"
 
@@ -153,19 +153,19 @@ func TestInitProject_projectDescriptorContents(t *testing.T) {
 		t.Errorf("failed reading descriptor: %v", err)
 	}
 
-	var sd descriptor.ServiceDescriptor
+	var sd metadata.Metadata
 
 	err = yaml.Unmarshal(b, &sd)
 	if err != nil {
 		t.Errorf("failed unmarshalling descriptor: %v", err)
 	}
 
-	info := descriptor.Info{
+	info := metadata.Info{
 		Name:    name,
 		Summary: "just a test for now",
 	}
 
-	expected := descriptor.Base(info)
+	expected := metadata.Base(info)
 
 	assert.Equal(t, expected, sd)
 }

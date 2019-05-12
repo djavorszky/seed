@@ -1,4 +1,4 @@
-package descriptor
+package metadata
 
 import (
 	"net/http"
@@ -140,7 +140,7 @@ func TestServiceDescriptor_AddRoute(t *testing.T) {
 			d.Routes = append(d.Routes, tt.addRoutes...)
 
 			if err := d.AddRoute(tt.route); (err != nil) != tt.wantErr {
-				t.Errorf("ServiceDescriptor.AddRoute() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Metadata.AddRoute() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			if tt.wantErr {
@@ -202,7 +202,7 @@ func TestServiceDescriptor_AddMiddleware(t *testing.T) {
 			d.Middlwares = append(d.Middlwares, tt.addMiddlewares...)
 
 			if err := d.AddMiddleware(tt.mw); (err != nil) != tt.wantErr {
-				t.Errorf("ServiceDescriptor.AddRoute() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Metadata.AddRoute() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			if tt.wantErr {

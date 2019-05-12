@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"seed/consts"
-	"seed/descriptor"
 	"seed/files"
+	"seed/metadata"
 	"strings"
 
 	"github.com/go-yaml/yaml"
@@ -296,7 +296,7 @@ func createDirs(pwd, projectName string) error {
 }
 
 func ServiceDescriptor(projectName string) error {
-	desc := descriptor.Base(descriptor.Info{
+	desc := metadata.Base(metadata.Info{
 		Name:    projectName,
 		Summary: "just a test for now",
 	})
@@ -305,13 +305,13 @@ func ServiceDescriptor(projectName string) error {
 
 	f, err := os.Create(path)
 	if err != nil {
-		return fmt.Errorf("failed creating project descriptor: %v", err)
+		return fmt.Errorf("failed creating project metadata: %v", err)
 	}
 	defer f.Close()
 
 	err = yaml.NewEncoder(f).Encode(&desc)
 	if err != nil {
-		return fmt.Errorf("failed creating descriptor: %v", err)
+		return fmt.Errorf("failed creating metadata: %v", err)
 	}
 
 	return nil

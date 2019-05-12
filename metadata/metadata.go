@@ -1,8 +1,8 @@
-package descriptor
+package metadata
 
-// ServiceDescriptor describes what the service should look like, and generates
+// Metadata describes what the service should look like, and generates
 // the output based on it.
-type ServiceDescriptor struct {
+type Metadata struct {
 	// Info holds generic information about the service itself.
 	Info
 
@@ -89,7 +89,7 @@ type Info struct {
 	Description string
 }
 
-var defaultDescriptor = ServiceDescriptor{
+var defMetadata = Metadata{
 	Routes: []Route{
 		/*{
 			Info: Info{
@@ -115,8 +115,8 @@ var defaultDescriptor = ServiceDescriptor{
 	},
 }
 
-func Base(info Info) ServiceDescriptor {
-	def := defaultDescriptor
+func Base(info Info) Metadata {
+	def := defMetadata
 	def.Info = info
 
 	return def

@@ -1,9 +1,9 @@
-package descriptor
+package metadata
 
 import "fmt"
 
-func (d *ServiceDescriptor) AddRoute(route Route) error {
-	for _, r := range d.Routes {
+func (m *Metadata) AddRoute(route Route) error {
+	for _, r := range m.Routes {
 		if r.HandlerName == route.HandlerName {
 			return fmt.Errorf("handler with the same name already exists: %v", r.HandlerName)
 		}
@@ -21,19 +21,19 @@ func (d *ServiceDescriptor) AddRoute(route Route) error {
 		}
 	}
 
-	d.Routes = append(d.Routes, route)
+	m.Routes = append(m.Routes, route)
 
 	return nil
 }
 
-func (d *ServiceDescriptor) AddMiddleware(mw Middleware) error {
-	for _, m := range d.Middlwares {
+func (m *Metadata) AddMiddleware(mw Middleware) error {
+	for _, m := range m.Middlwares {
 		if m.HandlerName == mw.HandlerName {
 			return fmt.Errorf("handler with the same name already exists: %v", m.HandlerName)
 		}
 	}
 
-	d.Middlwares = append(d.Middlwares, mw)
+	m.Middlwares = append(m.Middlwares, mw)
 
 	return nil
 }
