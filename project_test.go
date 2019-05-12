@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const name = "admiral"
@@ -72,26 +74,32 @@ func TestInitProject_projectDescriptor(t *testing.T) {
 	if err != nil {
 		t.Errorf("checking %s: %v", descriptor, err)
 	}
+
+	t.Errorf("test is not complete yet.")
 }
 
 func TestInitProject_serviceFile(t *testing.T) {
 	filename := fmt.Sprintf("%s.go", name)
-	serviceFileName := filepath.Join(pwd, name, filename)
 
-	f, err := os.Stat(serviceFileName)
+	generatedBytes, err :=
+		ioutil.ReadFile(filepath.Join(pwd, name, filename))
 	if err != nil {
-		if os.IsNotExist(err) {
-			t.Errorf("%s does not exist", serviceFileName)
-			return
-		}
-
-		t.Errorf("checking %s: %v", serviceFileName, err)
+		t.Errorf("reading generated service file: %v", err)
 	}
 
-	err = checkFileIsCorrect(f)
+	exampleBytes, err := ioutil.ReadFile(
+		filepath.Join(pwd, "testdata", "service.expected"))
 	if err != nil {
-		t.Errorf("checking %s: %v", serviceFileName, err)
+		t.Errorf("reading example service file: %v", err)
 	}
+
+	genString := string(generatedBytes)
+	exampleString := string(exampleBytes)
+
+	genString = strings.ReplaceAll(genString, "\r\n", "\n")
+	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
+
+	assert.Equal(t, exampleString, genString)
 }
 
 func TestInitProject_interfaceFile(t *testing.T) {
@@ -110,6 +118,9 @@ func TestInitProject_interfaceFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("checking %s: %v", interfaceFile, err)
 	}
+
+	t.Errorf("test is not complete yet.")
+
 }
 
 func TestInitProject_generatedFile(t *testing.T) {
@@ -151,11 +162,7 @@ func TestInitProject_interfaceContents(t *testing.T) {
 	genString = strings.ReplaceAll(genString, "\r\n", "\n")
 	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
 
-	if genString != exampleString {
-		t.Errorf(
-			"generated != expected:\n=== GENERATED ===\n%v\n=== vs EXPECTED ===\n%v",
-			genString, exampleString)
-	}
+	assert.Equal(t, exampleString, genString)
 }
 
 func TestInitProject_executableContents(t *testing.T) {
@@ -177,11 +184,7 @@ func TestInitProject_executableContents(t *testing.T) {
 	genString = strings.ReplaceAll(genString, "\r\n", "\n")
 	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
 
-	if genString != exampleString {
-		t.Errorf(
-			"generated != expected:\n=== GENERATED ===\n%v\n=== vs EXPECTED ===\n%v",
-			genString, exampleString)
-	}
+	assert.Equal(t, exampleString, genString)
 }
 
 func TestInitProject_generatedContents(t *testing.T) {
@@ -203,11 +206,7 @@ func TestInitProject_generatedContents(t *testing.T) {
 	genString = strings.ReplaceAll(genString, "\r\n", "\n")
 	exampleString = strings.ReplaceAll(exampleString, "\r\n", "\n")
 
-	if genString != exampleString {
-		t.Errorf(
-			"generated != expected:\n=== GENERATED ===\n%q\n=== vs EXPECTED ===\n%q",
-			genString, exampleString)
-	}
+	assert.Equal(t, exampleString, genString)
 }
 
 func checkFileIsCorrect(f os.FileInfo) error {
