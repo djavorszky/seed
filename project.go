@@ -57,6 +57,11 @@ func InitProject(projectName string) error {
 		return fmt.Errorf(initFailed, err)
 	}
 
+	err = createServiceFile(projectName)
+	if err != nil {
+		return fmt.Errorf(initFailed, err)
+	}
+
 	err = createMainFile(projectName)
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
@@ -75,6 +80,77 @@ func InitProject(projectName string) error {
 	err = formatFiles()
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
+	}
+
+	return nil
+}
+
+func createServiceFile(projectName string) error {
+	f := NewFilePath(projectName)
+
+	f.Type().Id("Server").Struct()
+
+	f.Func().Params(
+		Id("s").Op("*").Id("Server"),
+	).Id("LoggerMw").Params(
+		Id("next").Qual("net/http", "Handler"),
+	).Qual("net/http", "Handler").Block(
+		Comment("// Anything you add here will be executed once, during startup."),
+		Comment("// The returned http.Handler will be able to access these variables"),
+		Comment("// thanks to closure."),
+		Line(),
+		Id("prefix").Op(":=").Lit(fmt.Sprintf("[%s] - ", projectName)),
+		Return(
+			Qual("net/http", "HandlerFunc").Call(
+				Func().Params(
+					Id("w").Qual("net/http", "ResponseWriter"),
+					Id("r").Op("*").Qual("net/http", "Request"),
+				).Block(
+					Qual("log", "Println").Call(
+						Id("prefix"),
+						Id("r").Dot("RemoteAddr"),
+						Id("r").Dot("Method"),
+						Id("r").Dot("RequestURI"),
+					),
+					Line(),
+					Id("next").Dot("ServeHTTP").Call(
+						Id("w"), Id("r"),
+					),
+				),
+			),
+		),
+	)
+
+	f.Line()
+
+	f.Func().Params(
+		Id("s").Op("*").Id("Server"),
+	).Id("Index").Params().Qual("net/http", "HandlerFunc").Block(
+		Comment("// Anything you add here will be executed once, during startup."),
+		Comment("// The returned http.HandlerFunc will be able to access these variables"),
+		Comment("// thanks to closure."),
+		Line(),
+		Id("defaultMsg").Op(":=").Index().Byte().Call(Lit("I'm alive!")),
+		Return().Func().Params(
+			Id("w").Qual("net/http", "ResponseWriter"),
+			Id("r").Op("*").Qual("net/http", "Request"),
+		).Block(
+			Id("w").Dot("WriteHeader").Call(Qual("net/http", "StatusOK")),
+			Line(),
+			List(
+				Id("_"), Id("err"),
+			).Op(":=").Id("w").Dot("Write").Call(Id("defaultMsg")),
+			If(Id("err").Op("!=").Nil()).Block(
+				Panic(Id("err")),
+			),
+		),
+	)
+
+	path := filepath.Join(pwd, projectName, projectName+".go")
+
+	err := f.Save(path)
+	if err != nil {
+		return fmt.Errorf("saving file: %v", err)
 	}
 
 	return nil
@@ -188,7 +264,7 @@ func createGeneratedFile(projectName string) error {
 }
 
 func createServiceDescriptor(projectName string) error {
-	// for now, only create the file
+	// TODO: for now, only create the file
 
 	path := filepath.Join(pwd, projectName, projectName+".yml")
 
