@@ -1,0 +1,13 @@
+func (s *Server) {{.Name}}(next http.Handler) http.Handler {
+	// Anything you add here will be executed once, during startup.
+	// The returned http.Handler will be able to access these variables
+	// thanks to closure.
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// TODO: Business logic before the handler is called should go here
+
+		next.ServeHTTP(w, r)
+
+		// TODO: Business logic after the handler has been called should go here
+	})
+}

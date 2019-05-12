@@ -1,0 +1,17 @@
+func (s *Server) {{.Name}}() http.HandlerFunc {
+	// Anything you add here will be executed once, during startup.
+	// The returned http.HandlerFunc will be able to access these variables
+	// thanks to closure.
+
+	notImplemented := []byte("{{.Name}} not yet implemented")
+	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO: Business logic to be executed at every request should go here
+
+		w.WriteHeader(http.StatusNotImplemented)
+
+		_, err := w.Write(notImplemented)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
