@@ -60,6 +60,77 @@ func TestInitProject_foldersAreCreated(t *testing.T) {
 	}
 }
 
+func TestInitProject_executableFile(t *testing.T) {
+	mainPath := filepath.Join(pwd, name, cmdFolder, mainFile)
+
+	f, err := os.Stat(mainPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			t.Errorf("%s does not exist", mainPath)
+			return
+		}
+
+		t.Errorf("checking %s: %v", mainPath, err)
+	}
+
+	err = checkFileIsCorrect(f)
+	if err != nil {
+		t.Errorf("checking %s: %v", mainPath, err)
+	}
+}
+
+func TestInitProject_executableContents(t *testing.T) {
+	path := filepath.Join(pwd, name, cmdFolder, mainFile)
+
+	actual, err := readFile(path)
+	if err != nil {
+		t.Errorf("reading result file for %q: %v", "go.mod", err)
+	}
+
+	expected, err := parseExpected("main.expected", name)
+	if err != nil {
+		t.Errorf("parsing expected file: %v", err)
+	}
+
+	assert.Equal(t, expected, actual)
+}
+
+func TestInitProject_generatedFile(t *testing.T) {
+	filename := "generated.go"
+	interfaceFile := filepath.Join(pwd, name, genFolder, filename)
+
+	f, err := os.Stat(interfaceFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			t.Errorf("%s does not exist", interfaceFile)
+			return
+		}
+
+		t.Errorf("checking %s: %v", interfaceFile, err)
+	}
+
+	err = checkFileIsCorrect(f)
+	if err != nil {
+		t.Errorf("checking %s: %v", interfaceFile, err)
+	}
+}
+
+func TestInitProject_generatedContents(t *testing.T) {
+	path := filepath.Join(pwd, name, genFolder, generatedFile)
+
+	actual, err := readFile(path)
+	if err != nil {
+		t.Errorf("reading result file for %q: %v", "go.mod", err)
+	}
+
+	expected, err := parseExpected("generated.expected", name)
+	if err != nil {
+		t.Errorf("parsing expected file: %v", err)
+	}
+
+	assert.Equal(t, expected, actual)
+}
+
 func TestInitProject_projectDescriptor(t *testing.T) {
 	filename := fmt.Sprintf("%s.yml", name)
 	d := filepath.Join(pwd, name, filename)
@@ -79,6 +150,32 @@ func TestInitProject_projectDescriptor(t *testing.T) {
 	if err != nil {
 		t.Errorf("checking %s: %v", d, err)
 	}
+}
+
+func TestInitProject_projectDescriptorContents(t *testing.T) {
+	filename := fmt.Sprintf("%s.yml", name)
+	d := filepath.Join(pwd, name, filename)
+
+	b, err := ioutil.ReadFile(d)
+	if err != nil {
+		t.Errorf("failed reading descriptor: %v", err)
+	}
+
+	var sd descriptor.ServiceDescriptor
+
+	err = yaml.Unmarshal(b, &sd)
+	if err != nil {
+		t.Errorf("failed unmarshalling descriptor: %v", err)
+	}
+
+	info := descriptor.Info{
+		Name:    name,
+		Summary: "just a test for now",
+	}
+
+	expected := descriptor.Base(info)
+
+	assert.Equal(t, expected, sd)
 }
 
 func TestInitProject_goModFile(t *testing.T) {
@@ -114,32 +211,6 @@ func TestInitProject_goModFileContents(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, actual)
-}
-
-func TestInitProject_projectDescriptorContents(t *testing.T) {
-	filename := fmt.Sprintf("%s.yml", name)
-	d := filepath.Join(pwd, name, filename)
-
-	b, err := ioutil.ReadFile(d)
-	if err != nil {
-		t.Errorf("failed reading descriptor: %v", err)
-	}
-
-	var sd descriptor.ServiceDescriptor
-
-	err = yaml.Unmarshal(b, &sd)
-	if err != nil {
-		t.Errorf("failed unmarshalling descriptor: %v", err)
-	}
-
-	info := descriptor.Info{
-		Name:    name,
-		Summary: "just a test for now",
-	}
-
-	expected := descriptor.Base(info)
-
-	assert.Equal(t, expected, sd)
 }
 
 func TestInitProject_serviceFile(t *testing.T) {
@@ -195,26 +266,6 @@ func TestInitProject_interfaceFile(t *testing.T) {
 	}
 }
 
-func TestInitProject_generatedFile(t *testing.T) {
-	filename := "generated.go"
-	interfaceFile := filepath.Join(pwd, name, genFolder, filename)
-
-	f, err := os.Stat(interfaceFile)
-	if err != nil {
-		if os.IsNotExist(err) {
-			t.Errorf("%s does not exist", interfaceFile)
-			return
-		}
-
-		t.Errorf("checking %s: %v", interfaceFile, err)
-	}
-
-	err = checkFileIsCorrect(f)
-	if err != nil {
-		t.Errorf("checking %s: %v", interfaceFile, err)
-	}
-}
-
 func TestInitProject_interfaceContents(t *testing.T) {
 	path := filepath.Join(pwd, name, genFolder, interfaceFile)
 
@@ -224,38 +275,6 @@ func TestInitProject_interfaceContents(t *testing.T) {
 	}
 
 	expected, err := parseExpected("interface.expected", name)
-	if err != nil {
-		t.Errorf("parsing expected file: %v", err)
-	}
-
-	assert.Equal(t, expected, actual)
-}
-
-func TestInitProject_executableContents(t *testing.T) {
-	path := filepath.Join(pwd, name, cmdFolder, mainFile)
-
-	actual, err := readFile(path)
-	if err != nil {
-		t.Errorf("reading result file for %q: %v", "go.mod", err)
-	}
-
-	expected, err := parseExpected("main.expected", name)
-	if err != nil {
-		t.Errorf("parsing expected file: %v", err)
-	}
-
-	assert.Equal(t, expected, actual)
-}
-
-func TestInitProject_generatedContents(t *testing.T) {
-	path := filepath.Join(pwd, name, genFolder, generatedFile)
-
-	actual, err := readFile(path)
-	if err != nil {
-		t.Errorf("reading result file for %q: %v", "go.mod", err)
-	}
-
-	expected, err := parseExpected("generated.expected", name)
 	if err != nil {
 		t.Errorf("parsing expected file: %v", err)
 	}
