@@ -80,6 +80,25 @@ func TestInitProject_projectDescriptor(t *testing.T) {
 
 func TestInitProject_serviceFile(t *testing.T) {
 	filename := fmt.Sprintf("%s.go", name)
+	serviceFile := filepath.Join(pwd, name, filename)
+
+	f, err := os.Stat(serviceFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			t.Errorf("%s does not exist", serviceFile)
+		}
+
+		t.Errorf("checking %s: %v", serviceFile, err)
+	}
+
+	err = checkFileIsCorrect(f)
+	if err != nil {
+		t.Errorf("checking %s: %v", serviceFile, err)
+	}
+}
+
+func TestInitProject_serviceFileContents(t *testing.T) {
+	filename := fmt.Sprintf("%s.go", name)
 
 	generatedBytes, err :=
 		ioutil.ReadFile(filepath.Join(pwd, name, filename))
@@ -118,9 +137,6 @@ func TestInitProject_interfaceFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("checking %s: %v", interfaceFile, err)
 	}
-
-	t.Errorf("test is not complete yet.")
-
 }
 
 func TestInitProject_generatedFile(t *testing.T) {
