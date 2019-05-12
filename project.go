@@ -194,7 +194,8 @@ func createGeneratedFile(projectName string) error {
 	)
 
 	f.Comment("// ServeHTTP is what ultimately allows this service to be " +
-		"used by the standard library's\n// listen and serve functions")
+		"used by the standard library's")
+	f.Comment("// listen and serve functions")
 	f.Func().Params(
 		Id("s").Op("*").Id("Service"),
 	).Id("ServeHTTP").Params(
@@ -208,7 +209,8 @@ func createGeneratedFile(projectName string) error {
 	)
 
 	f.Comment("// Route is a struct that holds the path, the handler to " +
-		"be called when that path is hit, and\n// which list of methods it should serve.")
+		"be called when that path is hit, and")
+	f.Comment("// which list of methods it should serve.")
 
 	f.Type().Id("route").Struct(
 		Id("path").String(),
@@ -217,7 +219,8 @@ func createGeneratedFile(projectName string) error {
 	)
 
 	f.Comment("// New returns a new service implementation, using the " +
-		"service as a dependency. It also sets up the routes\n// and the middlewares.")
+		"service as a dependency. It also sets up the routes")
+	f.Comment("// and the middlewares.")
 
 	f.Func().Id("New").Params(
 		Id("service").Qual("gen", projectNameTitle+"Service"),
@@ -386,10 +389,10 @@ func createInterfaceFile(projectName string) error {
 	handler := fmt.Sprintf("%sHandler", title)
 	middleware := fmt.Sprintf("%sMiddleware", title)
 
-	f.Commentf("// %s encapsulates the handler interface, which "+
-		"holds all the methods to be called\n// by the server, and middleware "+
-		"interface, which contains all the middlewares to be added to the service.",
-		service)
+	f.Commentf("// %s encapsulates the handler interface, which holds "+
+		"all the methods to be called", service)
+	f.Comment("// by the server, and middleware interface, which contains " +
+		"all the middlewares to be added to the service.")
 
 	f.Type().Id(service).Interface(
 		Id(handler),
@@ -397,8 +400,8 @@ func createInterfaceFile(projectName string) error {
 	)
 
 	f.Commentf("// %s is the interface for the handlers. Any new "+
-		"endpoint added by seed will be added here as a\n// new method on "+
-		"the interface.", handler)
+		"endpoint added by seed will be added here as a", handler)
+	f.Comment("// new method on the interface.")
 
 	f.Type().Id(handler).Interface(
 		Id("Index").Params().Qual("net/http", "HandlerFunc"),
