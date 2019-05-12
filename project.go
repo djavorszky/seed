@@ -28,33 +28,33 @@ func InitProject(projectName string) error {
 	}
 
 	tasks := []struct {
-		do     func(string) ([]byte, error)
+		exec   func(string) ([]byte, error)
 		saveTo string
 	}{
 		{
-			do:     generate.ServiceFile,
+			exec:   generate.ServiceFile,
 			saveTo: filepath.Join(files.Pwd, projectName, projectName+".go"),
 		},
 		{
-			do:     generate.InterfaceFile,
+			exec:   generate.InterfaceFile,
 			saveTo: filepath.Join(files.Pwd, projectName, consts.GenFolder, consts.InterfaceFile),
 		},
 		{
-			do:     generate.MainFile,
-			saveTo: filepath.Join(files.Pwd, projectName, consts.CmdFolder, consts.MainFile),
-		},
-		{
-			do:     generate.GeneratedFile,
+			exec:   generate.GeneratedFile,
 			saveTo: filepath.Join(files.Pwd, projectName, consts.GenFolder, consts.GeneratedFile),
 		},
 		{
-			do:     generate.GoModule,
+			exec:   generate.MainFile,
+			saveTo: filepath.Join(files.Pwd, projectName, consts.CmdFolder, consts.MainFile),
+		},
+		{
+			exec:   generate.GoModule,
 			saveTo: filepath.Join(files.Pwd, projectName, "go.mod"),
 		},
 	}
 
 	for _, task := range tasks {
-		contents, err := task.do(projectName)
+		contents, err := task.exec(projectName)
 		if err != nil {
 			return fmt.Errorf(initFailed, err)
 		}
