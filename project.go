@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"seed/consts"
 	"seed/files"
 	"seed/generate"
 	"strings"
@@ -21,34 +22,47 @@ func InitProject(projectName string) error {
 		return fmt.Errorf(initFailed, err)
 	}
 
-	err = generate.InterfaceFile(projectName)
-	if err != nil {
-		return fmt.Errorf(initFailed, err)
-	}
-
-	err = generate.ServiceFile(projectName)
-	if err != nil {
-		return fmt.Errorf(initFailed, err)
-	}
-
-	err = generate.MainFile(projectName)
-	if err != nil {
-		return fmt.Errorf(initFailed, err)
-	}
-
-	err = generate.GeneratedFile(projectName)
-	if err != nil {
-		return fmt.Errorf(initFailed, err)
-	}
-
 	err = generate.ServiceDescriptor(projectName)
 	if err != nil {
 		return fmt.Errorf(initFailed, err)
 	}
 
-	err = generate.GoModule(projectName)
-	if err != nil {
-		return fmt.Errorf(initFailed, err)
+	tasks := []struct {
+		do     func(string) ([]byte, error)
+		saveTo string
+	}{
+		{
+			do:     generate.ServiceFile,
+			saveTo: filepath.Join(files.Pwd, projectName, projectName+".go"),
+		},
+		{
+			do:     generate.InterfaceFile,
+			saveTo: filepath.Join(files.Pwd, projectName, consts.GenFolder, consts.InterfaceFile),
+		},
+		{
+			do:     generate.MainFile,
+			saveTo: filepath.Join(files.Pwd, projectName, consts.CmdFolder, consts.MainFile),
+		},
+		{
+			do:     generate.GeneratedFile,
+			saveTo: filepath.Join(files.Pwd, projectName, consts.GenFolder, consts.GeneratedFile),
+		},
+		{
+			do:     generate.GoModule,
+			saveTo: filepath.Join(files.Pwd, projectName, "go.mod"),
+		},
+	}
+
+	for _, task := range tasks {
+		contents, err := task.do(projectName)
+		if err != nil {
+			return fmt.Errorf(initFailed, err)
+		}
+
+		err = ioutil.WriteFile(task.saveTo, contents, files.DefaultPerm)
+		if err != nil {
+			return fmt.Errorf(initFailed, err)
+		}
 	}
 
 	err = formatFiles(projectName)

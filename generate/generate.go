@@ -1,8 +1,8 @@
 package generate
 
 import (
+	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"seed/consts"
@@ -14,7 +14,7 @@ import (
 	"github.com/go-yaml/yaml"
 )
 
-func ServiceFile(projectName string) error {
+func ServiceFile(projectName string) ([]byte, error) {
 	f := NewFilePath(projectName)
 
 	f.Type().Id("Server").Struct()
@@ -75,17 +75,17 @@ func ServiceFile(projectName string) error {
 		),
 	)
 
-	path := filepath.Join(files.Pwd, projectName, projectName+".go")
+	var buf bytes.Buffer
 
-	err := f.Save(path)
+	err := f.Render(&buf)
 	if err != nil {
-		return fmt.Errorf("saving file: %v", err)
+		return nil, fmt.Errorf("rendering file: %v", err)
 	}
 
-	return nil
+	return buf.Bytes(), nil
 }
 
-func GeneratedFile(projectName string) error {
+func GeneratedFile(projectName string) ([]byte, error) {
 	f := NewFilePath("gen")
 
 	projectNameTitle := strings.Title(projectName)
@@ -187,14 +187,14 @@ func GeneratedFile(projectName string) error {
 		),
 	)
 
-	path := filepath.Join(files.Pwd, projectName, consts.GenFolder, consts.GeneratedFile)
+	var buf bytes.Buffer
 
-	err := f.Save(path)
+	err := f.Render(&buf)
 	if err != nil {
-		return fmt.Errorf("saving file: %v", err)
+		return nil, fmt.Errorf("rendering file: %v", err)
 	}
 
-	return nil
+	return buf.Bytes(), nil
 }
 
 func ServiceDescriptor(projectName string) error {
@@ -219,7 +219,7 @@ func ServiceDescriptor(projectName string) error {
 	return nil
 }
 
-func MainFile(projectName string) error {
+func MainFile(projectName string) ([]byte, error) {
 	f := NewFile("main")
 
 	f.Func().Id("main").Params().Block(
@@ -235,17 +235,17 @@ func MainFile(projectName string) error {
 		),
 	)
 
-	path := filepath.Join(files.Pwd, projectName, consts.CmdFolder, consts.MainFile)
+	var buf bytes.Buffer
 
-	err := f.Save(path)
+	err := f.Render(&buf)
 	if err != nil {
-		return fmt.Errorf("saving file: %v", err)
+		return nil, fmt.Errorf("rendering file: %v", err)
 	}
 
-	return nil
+	return buf.Bytes(), nil
 }
 
-func InterfaceFile(projectName string) error {
+func InterfaceFile(projectName string) ([]byte, error) {
 	f := NewFile("gen")
 
 	title := strings.Title(projectName)
@@ -280,14 +280,14 @@ func InterfaceFile(projectName string) error {
 		).Qual("net/http", "Handler"),
 	)
 
-	path := filepath.Join(files.Pwd, projectName, consts.GenFolder, consts.InterfaceFile)
+	var buf bytes.Buffer
 
-	err := f.Save(path)
+	err := f.Render(&buf)
 	if err != nil {
-		return fmt.Errorf("saving file: %v", err)
+		return nil, fmt.Errorf("rendering file: %v", err)
 	}
 
-	return nil
+	return buf.Bytes(), nil
 }
 
 func ProjectStructure(projectName string) error {
@@ -323,7 +323,7 @@ func createDirs(pwd, projectName string) error {
 	return nil
 }
 
-func GoModule(projectName string) error {
+func GoModule(projectName string) ([]byte, error) {
 	goModContents := fmt.Sprintf(`module %s
 
 go 1.12
@@ -331,12 +331,5 @@ go 1.12
 require github.com/gorilla/mux v1.7.1
 `, projectName)
 
-	path := filepath.Join(files.Pwd, projectName, "go.mod")
-
-	err := ioutil.WriteFile(path, []byte(goModContents), files.DefaultPerm)
-	if err != nil {
-		return fmt.Errorf("failed creating go.mod file: %v", err)
-	}
-
-	return nil
+	return []byte(goModContents), nil
 }
